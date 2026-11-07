@@ -41,7 +41,7 @@ and `/lib` (the Tempest 2000 port's):
     sh tools/pack.sh
 
 writes `build/vpk/mhpeenhanced-<version>.vpk` (program, `game.ini`,
-`mhavocpe.ini`, `run.sh`, `roms/mhavocpe.zip`). Bump `version` in
+`mhavocpe.ini`, `run.sh`, `marquee.png`; no ROMs). Bump `version` in
 `package/game.ini` first.
 
 ## Tools

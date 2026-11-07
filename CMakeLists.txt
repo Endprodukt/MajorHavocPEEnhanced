@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 
-project(mhavocpe_enhanced VERSION 0.2.9 LANGUAGES C CXX)
+project(mhavocpe_enhanced VERSION 0.3.0 LANGUAGES C CXX)
 
 # Builds: see BUILD.md.
 
@@ -96,5 +96,6 @@ if(MH_BUILD_GAME)
     configure_file(package/mhavocpe.ini ${CMAKE_CURRENT_BINARY_DIR}/mhavocpe.ini COPYONLY)
     configure_file(package/game.ini ${CMAKE_CURRENT_BINARY_DIR}/game.ini COPYONLY)
     configure_file(package/marquee.png ${CMAKE_CURRENT_BINARY_DIR}/marquee.png COPYONLY)
-    configure_file(package/roms/mhavocpe.zip ${CMAKE_CURRENT_BINARY_DIR}/roms/mhavocpe.zip COPYONLY)
+    # (the ROMs do not come with the game: the owner's roms/ next to the
+    # program, or the cabinet's ROM folders; README)
 endif()

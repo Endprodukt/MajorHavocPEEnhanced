@@ -2,7 +2,12 @@
 
 ## Current state (2026-11-07)
 
-- Version 0.2.9 built (the roller's standard 42 %, the service menu's
+- Version 0.3.0 built: the package without ROMs (the owner brings them,
+  README "ROMs"). Not committed, not on the cabinet. The cabinet runs
+  0.2.9 (its roms/ still holds the zips 0.2.9 brought).
+- Open: the public repository's history (commits 2016ef6, 689af96) and
+  the v0.2.9 release's .vpk still hold the ROMs; the owner decides.
+- Version 0.2.9 (the roller's standard 42 %, the service menu's
   pages joined, language and Tournament Edition) on the cabinet since
   2026-11-07, started by deploy.sh: 50 fps, 5-7 ms a frame, the six ROM
   zips in roms/; its saved sensitivity 41 % (the owner's) stays.
@@ -21,7 +26,41 @@
 - Both original programs (The Promised End 1.01, English, ADPCM) run on two
   6502 cores; board, rendering, sound, controls, menu and tools are C.
 - Git: public repository https://github.com/Endprodukt/MajorHavocPEEnhanced
-  (branch main, created 2026-11-07 with 0.2.8; no release yet).
+  (branch main, created 2026-11-07 with 0.2.8). Release v0.2.9
+  (2026-11-07, commit 689af96) with `mhpeenhanced-0.2.9.vpk`:
+  https://github.com/Endprodukt/MajorHavocPEEnhanced/releases/tag/v0.2.9
+  (its notes: `_scratch/release_notes_0.2.9.md`).
+
+## 0.3.0: no ROMs in the package
+
+- Built for the Pi (`build/pi/mhavocpe` md5
+  `7a2d79931d488295094f86ad88953209`), package
+  `build/vpk/mhpeenhanced-0.3.0.vpk` (md5
+  `13b75bea4c98267ac40286ff41211f4d`, 1.5M: program, ini files, run.sh,
+  marquee; no ROMs).
+- The owner: the ROMs are not to come with the game. package/roms/ is
+  gone (the zips kept for tests in `_scratch/romtest/`, untracked);
+  pack.sh, deploy.sh and CMake copy none. README "ROMs": the six builds,
+  their HBMAME sets and release zips, the files by board position, sizes,
+  CRC32, where they come from (jessaskey/mhavocpe ROMs/, ROMs/_builds/1.01)
+  and where they go (/usr/local/share/advance/rom on VectorPie).
+- The loader (rom/romset.c): each build alone (no English set needed);
+  per folder `<set>.zip`, `<set>/`, the release zip, `mhavocpe.zip` (a
+  merged set) and the folder; a file named for another build (mhpe101.*,
+  mhpede101.* ...) is never taken, one named for none only for the
+  English build or in the build's own zip or folder; 1MN's language byte
+  checked; speech and 6C from anywhere. The build set not there: the
+  English one, else any there runs. The menu marks builds without ROMs
+  (ROMS MISSING); leaving with one, the running one stays.
+- No ROMs at all: a screen says what is missing and where it goes (the
+  path in Hershey letters), any button back to the cabinet's menu.
+- Checked on the PC: none (the screen, seen in a window), split HBMAME
+  (English parent, German clone without speech), merged HBMAME (all six
+  in mhavocpe.zip: English, German, French Tournament each right), a
+  release zip alone (French Tournament; set to English it runs the French
+  Tournament), an HBMAME folder. Not checked: the menu's ROMS MISSING mark
+  on screen (simulated keys reached the owner's browser instead of the
+  window: no more key tests while the owner works at the PC), the cabinet.
 
 ## 0.2.9: the roller's standard 42 % (the LETA counts 4 times), the menu's pages joined, language and Tournament Edition
 

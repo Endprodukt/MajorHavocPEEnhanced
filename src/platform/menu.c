@@ -413,8 +413,14 @@ static void describe(int line, const mh_menu *u, const mh_config *cfg, vp_input 
     case L_DIFFICULTY:    *label = "DIFFICULTY"; snprintf(value, size, "%s", DIFFICULTY[o->difficulty & 3]); break;
     case L_BONUS:         *label = "BONUS LIFE"; snprintf(value, size, "%s", BONUS[o->bonus & 3]); break;
     case L_ROLLER_X2:     *label = "ROLLER MULTIPLIER"; snprintf(value, size, "%s", o->roller_x2 ? "X2" : "X1"); break;
-    case L_LANGUAGE:      *label = "LANGUAGE"; snprintf(value, size, "%s", LANGUAGE[cfg->language % 3]); break;
-    case L_EDITION:       *label = "EDITION"; snprintf(value, size, "%s", cfg->tournament ? "TOURNAMENT" : "THE PROMISED END"); break;
+    case L_LANGUAGE:
+    case L_EDITION: {
+        /* (a build whose ROMs are not there: leaving, the one running stays) */
+        const char *miss = u->build_have[(cfg->tournament ? 3 : 0) + cfg->language % 3] ? "" : "  ROMS MISSING";
+        if (line == L_LANGUAGE) { *label = "LANGUAGE"; snprintf(value, size, "%s%s", LANGUAGE[cfg->language % 3], miss); }
+        else { *label = "EDITION"; snprintf(value, size, "%s%s", cfg->tournament ? "TOURNAMENT" : "THE PROMISED END", miss); }
+        break;
+    }
     case L_RESTART_NOTE:  *label = restart_due(u, cfg) ? "CHANGED  THE GAME STARTS AGAIN ON EXIT" : "A CHANGE STARTS THE GAME AGAIN"; break;
     case L_PRICE:         *label = "PRICE"; snprintf(value, size, "%s", PRICE[o->price & 3]); break;
     case L_VOLUME:        *label = "VOLUME"; snprintf(value, size, "%d", (int)(cfg->volume * 10.0f + 0.5f)); break;

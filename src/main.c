@@ -1,7 +1,8 @@
 /* mhavocpe - Major Havoc - The Promised End (Jess M. Askey) on the board
  * of src/core, in real time.
  *
- * Finds the ROMs (the package brings them: roms/mhavocpe.zip), then runs
+ * Finds the ROMs (the owner's: rom/romset.h; none: the screen says what is
+ * missing and where it goes), then runs
  * both original programs on two 6502 cores against the board (alpha 2.5
  * MHz, gamma 1.25 MHz, both faster for steady frames), with the sound of its
  * four POKEYs and the speech, and shows what its vector generator draws on
@@ -61,19 +62,18 @@ enum { MODE_GAME, MODE_MENU, MODE_PATTERN, MODE_ROLLER_TEST };
 static int rom_paths(int argc, char **argv, const mh_config *cfg, const char **paths)
 {
     int n = 0;
-    /* (a path given as it is, a zip or a folder of files, is the
-     * standard build's; another build is looked for by its name in it) */
-    int standard = !strcmp(mh_romset_variant(cfg->language, cfg->tournament), "mhavocpe");
+    /* (a path given as it is, a zip or a folder of files, too: a file in
+     * it named for another build is never taken, rom/romset.h) */
     const char *arg = mh_arg(argc, argv, "--roms");
     if (arg) {
         n = mh_romset_add_dir(paths, n, MAX_PATHS, arg);
-        if (standard) paths[n++] = arg;
+        paths[n++] = arg;
     }
     if (cfg->rom_path[0]) {
         n = mh_romset_add_dir(paths, n, MAX_PATHS, cfg->rom_path);
-        if (standard) paths[n++] = cfg->rom_path;
+        paths[n++] = cfg->rom_path;
     }
-    /* the package's own, next to the program */
+    /* the game's own roms/, next to the program (the owner's) */
     static char pkg[1024];
     vp_asset_path("roms", pkg, sizeof pkg);
     n = mh_romset_add_dir(paths, n, MAX_PATHS, pkg);
@@ -130,33 +130,57 @@ static int g_argc;
 static char **g_argv;
 static int rom_language, rom_tournament;    /* the build running */
 
-/* The ROMs of the build the settings name: the standard one first (it
- * brings the speech), then the other build over it. Not found, the
- * standard one runs. Returns -1 if not even that is found. */
-static int load_roms(void)
+static int rom_have[6];                     /* each build's ROMs are there (tournament * 3 + language) */
+
+/* One build's ROMs into rs; 0 when it can run. */
+static int load_build(int language, int tournament, mh_romset *rs)
 {
     const char *paths[MAX_PATHS];
-    static mh_romset alt;
+    mh_config c = cfg;
+    c.language = language;
+    c.tournament = tournament;
+    mh_romset_use(mh_romset_variant(language, tournament));
+    int n = rom_paths(g_argc, g_argv, &c, paths);
+    int r = mh_romset_load(rs, paths, n);
     mh_romset_use("mhavocpe");
-    mh_config std = cfg;
-    std.language = std.tournament = 0;
-    int n = rom_paths(g_argc, g_argv, &std, paths);
-    if (mh_romset_load(&roms, paths, n) != 0) return -1;
-    rom_language = rom_tournament = 0;
-    const char *name = mh_romset_variant(cfg.language, cfg.tournament);
-    if (strcmp(name, "mhavocpe")) {
-        mh_romset_use(name);
-        n = rom_paths(g_argc, g_argv, &cfg, paths);
-        if (mh_romset_load(&alt, paths, n) == 0) {
-            mh_romset_fill(&alt, &roms);
-            roms = alt;
-            rom_language = cfg.language;
-            rom_tournament = cfg.tournament;
-        } else {
-            fprintf(stderr, "mhavocpe: %s not found: the English Promised End runs\n", name);
+    return r;
+}
+
+/* Which builds are there (the menu shows the others as missing). */
+static void find_builds(void)
+{
+    static mh_romset tmp;
+    for (int b = 0; b < 6; b++) rom_have[b] = load_build(b % 3, b / 3, &tmp) == 0;
+}
+
+/* The ROMs of the build the settings name; not there, the English Promised
+ * End's, else any build that is there. Without speech (a split set's
+ * clone), the speech from the English one. Returns -1 if none is there
+ * (roms then says what is missing of the English one). */
+static int load_roms(void)
+{
+    static mh_romset std;
+    int lang = cfg.language, te = cfg.tournament;
+    if (load_build(lang, te, &roms) != 0) {
+        int found = 0;
+        for (int b = 0; b < 6 && !found; b++) {
+            if (b == te * 3 + lang) continue;
+            if (load_build(b % 3, b / 3, &roms) == 0) {
+                fprintf(stderr, "mhavocpe: %s not found: %s runs\n", mh_romset_variant(lang, te), mh_romset_variant(b % 3, b / 3));
+                lang = b % 3;
+                te = b / 3;
+                found = 1;
+            }
         }
-        mh_romset_use("mhavocpe");
+        if (!found) {
+            load_build(0, 0, &roms);
+            return -1;
+        }
     }
+    if ((lang || te) && !(mh_romset_have(&roms, MH_R_X1) && mh_romset_have(&roms, MH_R_6C)) && load_build(0, 0, &std) == 0)
+        mh_romset_fill(&roms, &std);
+    rom_language = cfg.language = lang;
+    rom_tournament = cfg.tournament = te;
     snprintf(ee_path, sizeof ee_path, "%s/%s", vp_save_dir(), rom_tournament ? "eeprom_te.bin" : "eeprom.bin");
     return 0;
 }
@@ -435,6 +459,45 @@ static void show(vp_dvg *d, const mh_config *c, const mh_avg_list *pic)
     mh_draw_lines(d, c, g_placed, n);
 }
 
+/* No ROMs: what is missing and where they go, on the screen, until a
+ * button (the package does not bring them). */
+static void show_missing(mh_app *app, const char *missing)
+{
+    static mh_controls ctl;
+    mh_controls_init(&ctl, &cfg, app->in);
+    double t = 0.0;
+    char line[600];
+    while (!app->quit) {
+        double dt;
+        if (!mh_app_poll(app, &dt)) break;
+        t += dt;
+        mh_controls_read(&ctl, app->in, dt);
+        if (t > 1.0 && (ctl.nav.fire || ctl.nav.back || ctl.start1 || ctl.jump || ctl.menu)) break;
+        mh_app_begin_frame(app);
+        vp_dvg *d = app->dvg;
+        vp_text_font(VP_FONT_ASTEROIDS);
+        vp_color(d, 255, 220, 60);
+        vp_text(d, "MAJOR HAVOC PE ENHANCED", 2048, 3350, 130, VP_TEXT_CENTER);
+        vp_color(d, 255, 70, 50);
+        vp_text(d, "THE GAME'S ROMS ARE MISSING", 2048, 2950, 110, VP_TEXT_CENTER);
+        vp_text_font(VP_FONT_HERSHEY);
+        vp_color(d, 220, 220, 220);
+        vp_text(d, "Major Havoc - The Promised End 1.01 (ADPCM speech):", 2048, 2500, 75, VP_TEXT_CENTER);
+        vp_text(d, "HBMAME's mhavocpe.zip or the release mhavocpe_en_adpcm_101.zip", 2048, 2330, 75, VP_TEXT_CENTER);
+        vp_text(d, "into", 2048, 2160, 75, VP_TEXT_CENTER);
+        vp_color(d, 80, 220, 255);
+        vp_text(d, "/usr/local/share/advance/rom", 2048, 1960, 95, VP_TEXT_CENTER);
+        vp_color(d, 220, 220, 220);
+        snprintf(line, sizeof line, "missing: %s%s", missing, roms.lpc ? "   (an LPC build was found: ADPCM only)" : "");
+        vp_text(d, line, 2048, 1650, 60, VP_TEXT_CENTER);
+        vp_text(d, "The languages and the Tournament Edition: see the README.", 2048, 1450, 60, VP_TEXT_CENTER);
+        vp_text_font(VP_FONT_ASTEROIDS);
+        vp_color(d, 110, 130, 255);
+        vp_text(d, "ANY BUTTON  BACK", 2048, 900, 70, VP_TEXT_CENTER);
+        if (mh_app_end_frame(app) != 0) break;
+    }
+}
+
 /* The menu left: the settings saved; the game's own changed, into its
  * EEPROM and the game started again to take them; another build chosen,
  * the game starts with it (its own EEPROM, the menu's options in it). */
@@ -489,14 +552,21 @@ int main(int argc, char **argv)
     g_argv = argv;
     if (load_roms() != 0) {
         char missing[512];
-        fprintf(stderr, "mhavocpe: ROMs missing: %s (roms/mhavocpe.zip of the package; --roms PATH)%s\n",
+        fprintf(stderr, "mhavocpe: ROMs missing: %s (The Promised End 1.01, ADPCM: HBMAME's mhavocpe.zip or "
+                "mhavocpe_en_adpcm_101.zip into /usr/local/share/advance/rom; README)%s\n",
                 mh_romset_missing(&roms, missing, sizeof missing),
                 roms.lpc ? "; a build with LPC speech was found: only ADPCM builds are supported" : "");
+        mh_app app;
+        if (mh_app_open(&app, "Major Havoc PE Enhanced", argc, argv, cfg.board_hz) == 0) {
+            show_missing(&app, missing);
+            mh_app_close(&app);
+        }
         return 1;
     }
     printf("mhavocpe: ROMs from %s: %s%s%s\n", roms.source, mh_romset_describe(&roms, buf, sizeof buf),
            mh_romset_have(&roms, MH_R_X1) ? "" : ", no speech (X1 missing)",
            mh_romset_have(&roms, MH_R_6C) ? "" : ", no 136002-125 (the vector generator's timing is approximate)");
+    find_builds();
 
     mh_app app;
     if (mh_app_open(&app, "Major Havoc PE Enhanced", argc, argv, cfg.board_hz) != 0) return 1;
@@ -538,6 +608,7 @@ int main(int argc, char **argv)
                 mh_options opt;
                 mh_options_get(&m, &opt);
                 mh_menu_open(&menu, &opt, m.in.self_test, rom_language, rom_tournament);
+                memcpy(menu.build_have, rom_have, sizeof menu.build_have);
                 mode = MODE_MENU;
                 app.hold_cancel = 1;                /* Esc goes back in the menu, it does not end */
             } else {

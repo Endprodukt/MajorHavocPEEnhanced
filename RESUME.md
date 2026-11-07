@@ -38,10 +38,15 @@
 - Roller: the game needs about 2400 counts a second for Rex's full speed;
   the cabinet's roller about 500 a turn (LETA 4x); standard 42 %
   (`render/config.c`, ORIGINAL_COUNTS in `platform/menu.c` and `main.c`).
-- Builds (language, Tournament Edition): `main.c load_roms`, `leave_menu`;
-  `rom/romset.c` (mh_romset_variant/use/fill); package/roms/*.zip (made
-  from upstream/ROMs/<set>, programs only). Test a build headless:
+- Builds (language, Tournament Edition): `main.c load_build`, `load_roms`,
+  `find_builds`, `leave_menu`, `show_missing`; `rom/romset.c`
+  (mh_romset_variant/use/fill, the file name rules). The package brings
+  no ROMs (0.3.0); test sets in `_scratch/romtest/` (A split, B merged,
+  C a release zip, D a folder; untracked). Test a build headless:
   `mhshot --roms upstream/ROMs/mhavocpede --enhance ...`.
-- Next: (0.2.9 is on the cabinet) the owner's verdict on the languages,
+- Never send simulated keys to the desktop while the owner works at the
+  PC: they reached the owner's browser once.
+- Next: the owner's word on the ROMs left in the repository's history and
+  in the v0.2.9 release; 0.3.0 to commit, release, cabinet (ask). (0.2.9 is on the cabinet) the owner's verdict on the languages,
   the Tournament Edition, the joined menu pages, the
   music and the enhancements, the open items in STATUS.md.

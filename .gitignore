@@ -12,3 +12,4 @@ __pycache__/
 *.webm
 *.wmv
 *.m4v
+/package/roms/

@@ -11,15 +11,68 @@ the OKI 6295 speech go to the speaker. Built from Tempest Enhanced
 (https://github.com/Endprodukt/TempestEnhanced): its 6502 core, AVG state machine, POKEY, platform
 layer (app, menu) and tools were taken over; the controls are the SDK's own.
 
-The ROMs come with the package, nothing to find: release 1.01 with ADPCM
-speech (`upstream/ROMs`) in all six builds, English, German and French,
-each as The Promised End and as the Tournament Edition (other mazes):
-`package/roms/mhavocpe.zip` complete, the other five (`mhavocpede`,
-`mhavocpefr`, `mhavocpete`, `mhavocpedete`, `mhavocpefrte`, HBMAME's names)
-with their programs only; the speech (the same English in all six) comes
-from `mhavocpe.zip`. There is no licence problem with them (the owner's
-word). The cabinet's AdvanceMAME has only a pre-release (`mhavocpex7`).
-The service menu's GAME SETTINGS choose the build (LANGUAGE, EDITION).
+The ROMs do not come with the package: bring your own (see ROMs below).
+
+## ROMs
+
+Major Havoc - The Promised End 1.01 by Jess M. Askey, with ADPCM speech
+(builds with LPC speech are not supported). It comes in six builds:
+English, German and French, each as The Promised End and as the
+Tournament Edition (other mazes). One is enough; the service menu's GAME
+SETTINGS (LANGUAGE, EDITION) choose among those that are there and mark
+the others ROMS MISSING.
+
+Where they come from: [jessaskey/mhavocpe](https://github.com/jessaskey/mhavocpe),
+folder `ROMs/` (one folder per build, as HBMAME names them) or
+`ROMs/_builds/1.01/` (the release zips). HBMAME's sets work as they are:
+split, merged or non-merged.
+
+Where they go: on the VectorPie cabinet into `/usr/local/share/advance/rom/`
+(the cabinet's ROM folder, also on its network share), as zips or as
+folders. Also looked in: the game's own `roms/` folder, `rom_path` in
+`mhavocpe.ini`, `--roms PATH`, `$MH_ROMS`, AdvanceMAME's `dir_rom`.
+Without them the game shows what is missing and where it goes.
+
+| Build | HBMAME set | or the release zip | files |
+|---|---|---|---|
+| English | `mhavocpe.zip` | `mhavocpe_en_adpcm_101.zip` | `mhpe101.*` |
+| German | `mhavocpede.zip` | `mhavocpe_de_adpcm_101.zip` | `mhpede101.*` |
+| French | `mhavocpefr.zip` | `mhavocpe_fr_adpcm_101.zip` | `mhpefr101.*` |
+| English, Tournament | `mhavocpete.zip` | `mhavocpe_en_tournament_adpcm_101.zip` | `mhpete101.*` |
+| German, Tournament | `mhavocpedete.zip` | `mhavocpe_de_tournament_adpcm_101.zip` | `mhpedete101.*` |
+| French, Tournament | `mhavocpefrte.zip` | `mhavocpe_fr_tournament_adpcm_101.zip` | `mhpefrte101.*` |
+
+Each build's files (the file names may differ; the ending names the
+board position):
+
+| Position | Size | What | Needed |
+|---|---|---|---|
+| `.1mn` | 16 KB | alpha program | yes |
+| `.1l` | 16 KB | alpha program | yes |
+| `.1q` | 32 KB | alpha program, paged | yes |
+| `.1np` | 32 KB | alpha program, paged | yes |
+| `.6kl` | 8 KB | vector ROM | yes |
+| `.6h` | 16 KB | vector ROM, paged | yes |
+| `.6jk` | 16 KB | vector ROM, paged | yes |
+| `.9s` | 16 KB | gamma (sound) program | yes |
+| `.x1` | 256 KB | speech (the same in all six) | no: without it, no speech |
+| `136002-125.6c` | 256 B | the vector generator's state PROM (Atari's) | no: without it, its timing is approximate |
+
+A clone without speech (an HBMAME split set) takes it from `mhavocpe.zip`.
+
+CRC32 of 1.01 (`x1`: `aade65d1`, `136002-125.6c`: `5903af03` in all six):
+
+| Build | 1mn | 1l | 1q | 1np | 6kl | 6h | 6jk | 9s |
+|---|---|---|---|---|---|---|---|---|
+| mhavocpe | 8b4b1c7c | 90348169 | d5d86868 | 6f7b38a9 | ddcaab40 | 6b380183 | 7ecfd43b | 46cdd0fa |
+| mhavocpede | a3ff05f2 | 214369f7 | ad51ea70 | 7d3c4e41 | 5971ccb7 | a7e9178f | b21ec237 | a3e4cbcb |
+| mhavocpefr | 64b59f45 | bc0d539f | 12ef0140 | 14305109 | 0fcd62ef | 29eb2bda | 3c1cfe62 | 57eee0d9 |
+| mhavocpete | 71fdffa0 | feba2023 | 428b51fd | 835c85fd | ddcaab40 | 6b380183 | 7ecfd43b | 46cdd0fa |
+| mhavocpedete | 5949e62e | daf0e86a | 9401e3be | 9fe25082 | 5971ccb7 | a7e9178f | b21ec237 | a3e4cbcb |
+| mhavocpefrte | 9e037c99 | 67eac8ae | 1db409a8 | 620015e9 | 0fcd62ef | 29eb2bda | 3c1cfe62 | 57eee0d9 |
+
+The cabinet's AdvanceMAME brings only a pre-release (`mhavocpex7`), which
+this game does not take.
 
 ## Controls
 
@@ -97,7 +150,7 @@ and one missed is made up. AS THE CABINET keeps the original.
 ## Files on the cabinet
 
 `/persistent/games/mhpeenhanced` (the menu's group: Atari): `mhavocpe`,
-`game.ini`, `mhavocpe.ini`, `run.sh`, `marquee.png`, `roms/` (the six builds' zips); `save/` holds `mhavocpe.ini` (the owner's
+`game.ini`, `mhavocpe.ini`, `run.sh`, `marquee.png` (the ROMs: `/usr/local/share/advance/rom/`, above); `save/` holds `mhavocpe.ini` (the owner's
 settings), `controls.ini` (the controls) and `eeprom.bin` (high scores, the game's options, statistics; the
 Tournament Edition's in `eeprom_te.bin`, the languages share one).
 

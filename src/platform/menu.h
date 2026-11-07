@@ -72,6 +72,7 @@ typedef struct mh_menu {
     mh_options orig;        /* as they were when the menu opened */
     int    opt_changed;     /* they differ from the game's: into the EEPROM on leaving */
     int    build_language, build_tournament;    /* the build running */
+    int    build_have[6];   /* each build's ROMs are there (tournament * 3 + language) */
     vp_capture cap;         /* laying out a function's controls */
     int    rcap;            /* laying out the roller's source */
     int    radding;         /* a source was laid out since the cursor came to the row: the next adds */

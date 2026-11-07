@@ -8,10 +8,9 @@
 K="-i $HOME/.ssh/id_ed25519_vectorpie -o ConnectTimeout=8 -o BatchMode=yes"
 H=pi@192.168.0.122
 D=/persistent/games/mhpeenhanced
-ssh $K $H "mkdir -p $D/save $D/roms" || exit 1
+ssh $K $H "mkdir -p $D/save" || exit 1
 scp -q $K build/pi/mhavocpe $H:$D/mhavocpe.new || exit 1
 scp -q $K package/game.ini package/mhavocpe.ini package/run.sh $H:$D/ || exit 1
-scp -q $K package/roms/*.zip $H:$D/roms/ || exit 1
 [ -f package/marquee.png ] && scp -q $K package/marquee.png $H:$D/
 # Another game on the board (started from the cabinet's menu): install only,
 # do not start ours over it (two programs on one board slow both down).

@@ -55,13 +55,48 @@ static int part_of(const char *name)
     return -1;
 }
 
-static void offer(mh_romset *rs, int r, const uint8_t *data, size_t size)
+/* --- the builds ------------------------------------------------------------------- */
+
+static const char *const NAME[6] = {
+    "mhavocpe", "mhavocpede", "mhavocpefr", "mhavocpete", "mhavocpedete", "mhavocpefrte",
+};
+static const char *const PREFIX[6] = { "mhpe", "mhpede", "mhpefr", "mhpete", "mhpedete", "mhpefrte" };
+static const int LANGUAGE_OF[6] = { 0, 1, 2, 0, 1, 2 };
+
+static int g_build;            /* the build looked for, an index of NAME */
+static int g_own;              /* the zip or folder scanned is the build's own */
+
+/* The build a file is named for (its prefix and then a digit), -1: none. */
+static int build_of(const char *base)
 {
-    if (r < 0 || (rs->found & (1u << r))) return;
+    for (int b = 0; b < 6; b++) {
+        size_t n = strlen(PREFIX[b]);
+        if (!strncmp(base, PREFIX[b], n) && isdigit((unsigned char)base[n])) return b;
+    }
+    return -1;
+}
+
+static void offer(mh_romset *rs, int r, const char *name, const uint8_t *data, size_t size)
+{
+    if (r < 0) return;
+    const char *base = name;
+    for (const char *p = name; *p; p++)
+        if (*p == '/' || *p == '\\') base = p + 1;
+    char low[64];
+    size_t k = 0;
+    for (; base[k] && k < sizeof low - 1; k++) low[k] = (char)tolower((unsigned char)base[k]);
+    low[k] = '\0';
+    int b = build_of(low), shared = r == MH_R_X1 || r == MH_R_6C;
+    /* (a file named for none: the standard build's anywhere, as before
+     * the builds; another's only in its own zip or folder) */
+    int q = b == g_build ? 2 : b >= 0 ? (shared ? 1 : 0) : (shared || g_own || g_build == 0 ? 1 : 0);
+    if (q == 0) return;
+    if ((rs->found & (1u << r)) && rs->quality[r] >= q) return;
     if (r == MH_R_9S && size == 0x8000) { rs->lpc = 1; return; }
     if (size != PARTS[r].size) return;
     memcpy(dest(rs, r), data, size);
     rs->found |= 1u << r;
+    rs->quality[r] = (uint8_t)q;
 }
 
 static void scan_zip(mh_romset *rs, const char *path)
@@ -78,7 +113,7 @@ static void scan_zip(mh_romset *rs, const char *path)
         size_t size = 0;
         void *data = mz_zip_reader_extract_to_heap(&zip, i, &size, 0);
         if (data) {
-            offer(rs, r, (const uint8_t *)data, size);
+            offer(rs, r, st.m_filename, (const uint8_t *)data, size);
             mz_free(data);
         }
     }
@@ -94,7 +129,7 @@ static void scan_file(mh_romset *rs, const char *path)
     static uint8_t buf[0x40000 + 1];
     size_t n = fread(buf, 1, sizeof buf, f);
     fclose(f);
-    if (n < sizeof buf) offer(rs, r, buf, n);
+    if (n < sizeof buf) offer(rs, r, path, buf, n);
 }
 
 static int is_dir(const char *path)
@@ -139,10 +174,22 @@ int mh_romset_load(mh_romset *rs, const char *const *paths, int npaths)
     for (int i = 0; i < npaths; i++) {
         if (!paths[i] || !*paths[i]) continue;
         memset(&one, 0, sizeof one);
+        /* the build's own zip or folder: its name or its release zip's */
+        const char *base = paths[i];
+        for (const char *p = paths[i]; *p; p++)
+            if (*p == '/' || *p == '\\') base = p + 1;
+        char own[64];
+        snprintf(own, sizeof own, "%s.zip", NAME[g_build]);
+        g_own = !strcmp(base, NAME[g_build]) || !strcmp(base, own) ||
+                !strcmp(base, mh_romset_release_zip(LANGUAGE_OF[g_build], g_build >= 3));
         if (is_dir(paths[i])) scan_dir(&one, paths[i]);
         else if (ends_with_zip(paths[i])) scan_zip(&one, paths[i]);
         else continue;
         lpc |= one.lpc;
+        if ((one.found & REQUIRED) == REQUIRED && one.r1mn[1] != LANGUAGE_OF[g_build]) {
+            fprintf(stderr, "mhavocpe: %s: not %s (its language %u)\n", paths[i], NAME[g_build], one.r1mn[1]);
+            continue;
+        }
         if ((one.found & REQUIRED) == REQUIRED) {
             *rs = one;
             snprintf(rs->source, sizeof rs->source, "%s", paths[i]);
@@ -181,18 +228,26 @@ const char *mh_romset_describe(const mh_romset *rs, char *buf, int size)
 
 const char *mh_romset_variant(int language, int tournament)
 {
-    static const char *const NAME[2][3] = {
-        { "mhavocpe", "mhavocpede", "mhavocpefr" },
-        { "mhavocpete", "mhavocpedete", "mhavocpefrte" },
-    };
-    return NAME[tournament ? 1 : 0][language >= 0 && language < 3 ? language : 0];
+    return NAME[(tournament ? 3 : 0) + (language >= 0 && language < 3 ? language : 0)];
 }
 
-static char g_name[32] = "mhavocpe";
+const char *mh_romset_release_zip(int language, int tournament)
+{
+    static const char *const LANG[3] = { "en", "de", "fr" };
+    static char buf[64];
+    snprintf(buf, sizeof buf, "mhavocpe_%s%s_adpcm_101.zip", LANG[language >= 0 && language < 3 ? language : 0],
+             tournament ? "_tournament" : "");
+    return buf;
+}
+
+static int g_nstore;
 
 void mh_romset_use(const char *name)
 {
-    snprintf(g_name, sizeof g_name, "%s", name && *name ? name : "mhavocpe");
+    g_build = 0;
+    for (int b = 0; b < 6; b++)
+        if (name && !strcmp(name, NAME[b])) g_build = b;
+    g_nstore = 0;
 }
 
 void mh_romset_fill(mh_romset *rs, const mh_romset *from)
@@ -209,15 +264,21 @@ void mh_romset_fill(mh_romset *rs, const mh_romset *from)
 
 #define MAX_STORE 160
 static char g_store[MAX_STORE][1024];
-static int  g_nstore;
 
 int mh_romset_add_dir(const char **out, int n, int max, const char *dir)
 {
-    int standard = !strcmp(g_name, "mhavocpe");
-    for (int f = 0; f < 2 && n < max && g_nstore < MAX_STORE; f++) {
-        if (f == 0) snprintf(g_store[g_nstore], sizeof g_store[g_nstore], "%s/%s.zip", dir, g_name);
-        else if (standard) snprintf(g_store[g_nstore], sizeof g_store[g_nstore], "%s", dir);
-        else snprintf(g_store[g_nstore], sizeof g_store[g_nstore], "%s/%s", dir, g_name);
+    const char *name = NAME[g_build];
+    for (int f = 0; f < 5 && n < max && g_nstore < MAX_STORE; f++) {
+        char *s = g_store[g_nstore];
+        size_t size = sizeof g_store[g_nstore];
+        switch (f) {
+        case 0:  snprintf(s, size, "%s/%s.zip", dir, name); break;
+        case 1:  snprintf(s, size, "%s/%s", dir, name); break;
+        case 2:  snprintf(s, size, "%s/%s", dir, mh_romset_release_zip(LANGUAGE_OF[g_build], g_build >= 3)); break;
+        case 3:  if (g_build == 0) continue;            /* (a merged set: the clones in the parent's zip) */
+                 snprintf(s, size, "%s/mhavocpe.zip", dir); break;
+        default: snprintf(s, size, "%s", dir); break;
+        }
         out[n++] = g_store[g_nstore++];
     }
     return n;
