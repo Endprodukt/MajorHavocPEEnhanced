@@ -179,15 +179,45 @@ const char *mh_romset_describe(const mh_romset *rs, char *buf, int size)
     return buf;
 }
 
-#define MAX_STORE 48
+const char *mh_romset_variant(int language, int tournament)
+{
+    static const char *const NAME[2][3] = {
+        { "mhavocpe", "mhavocpede", "mhavocpefr" },
+        { "mhavocpete", "mhavocpedete", "mhavocpefrte" },
+    };
+    return NAME[tournament ? 1 : 0][language >= 0 && language < 3 ? language : 0];
+}
+
+static char g_name[32] = "mhavocpe";
+
+void mh_romset_use(const char *name)
+{
+    snprintf(g_name, sizeof g_name, "%s", name && *name ? name : "mhavocpe");
+}
+
+void mh_romset_fill(mh_romset *rs, const mh_romset *from)
+{
+    if (!mh_romset_have(rs, MH_R_X1) && mh_romset_have(from, MH_R_X1)) {
+        memcpy(rs->x1, from->x1, sizeof rs->x1);
+        rs->found |= 1u << MH_R_X1;
+    }
+    if (!mh_romset_have(rs, MH_R_6C) && mh_romset_have(from, MH_R_6C)) {
+        memcpy(rs->prom, from->prom, sizeof rs->prom);
+        rs->found |= 1u << MH_R_6C;
+    }
+}
+
+#define MAX_STORE 160
 static char g_store[MAX_STORE][1024];
 static int  g_nstore;
 
 int mh_romset_add_dir(const char **out, int n, int max, const char *dir)
 {
-    static const char *const forms[] = { "%s/mhavocpe.zip", "%s" };
+    int standard = !strcmp(g_name, "mhavocpe");
     for (int f = 0; f < 2 && n < max && g_nstore < MAX_STORE; f++) {
-        snprintf(g_store[g_nstore], sizeof g_store[g_nstore], forms[f], dir);
+        if (f == 0) snprintf(g_store[g_nstore], sizeof g_store[g_nstore], "%s/%s.zip", dir, g_name);
+        else if (standard) snprintf(g_store[g_nstore], sizeof g_store[g_nstore], "%s", dir);
+        else snprintf(g_store[g_nstore], sizeof g_store[g_nstore], "%s/%s", dir, g_name);
         out[n++] = g_store[g_nstore++];
     }
     return n;

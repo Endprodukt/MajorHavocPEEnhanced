@@ -8,19 +8,23 @@
  *                     row, then the control; the first since the cursor
  *                     came to the row replaces, every further one adds.
  *                     Left / right: none or the standard. Delete: the
- *                     standard. Kept in save/controls.ini.
- *   ROLLER            what turns it (START, then move the spinner, trackball,
+ *                     standard. Kept in save/controls.ini. Then the
+ *                     roller (ROLLER): what turns it (START, then move the spinner, trackball,
  *                     mouse or stick; again: one more; left / right the
  *                     usual ones), sensitivity (MAME's percent, shown as
  *                     turns of the original roller), the spinner's counts a
  *                     turn, one turn as the original's, direction, the
  *                     game's roller x2, a stick's and the keys' speed, a
  *                     live test
- *   GAME SETTINGS     lives, difficulty, bonus life, roller x2
+ *   GAME SETTINGS     language (English, German, French), edition (The
+ *                     Promised End, the Tournament Edition: other mazes),
+ *                     lives, difficulty, bonus life, roller x2; then the
+ *                     enhancements (ENHANCEMENTS, render/enhance.h)
  *   CREDIT SETTINGS   the price
- *   SOUND SETTINGS    volume, speech, sounds in the attract mode
+ *   SOUND SETTINGS    volume, speech, sounds in the attract mode, music tempo
  *   PICTURE           smooth motion, steady frames, the board's rate, size,
  *                     place, mirroring, brightness, a test pattern
+ *   A long page is set closer to fit the screen.
  *   the game's own self test, the high scores and statistics reset
  *
  * The game's own settings (game, credit, attract sounds) are in its EEPROM
@@ -67,6 +71,7 @@ typedef struct mh_menu {
     mh_options opt;         /* the game's own settings as edited */
     mh_options orig;        /* as they were when the menu opened */
     int    opt_changed;     /* they differ from the game's: into the EEPROM on leaving */
+    int    build_language, build_tournament;    /* the build running */
     vp_capture cap;         /* laying out a function's controls */
     int    rcap;            /* laying out the roller's source */
     int    radding;         /* a source was laid out since the cursor came to the row: the next adds */
@@ -74,8 +79,9 @@ typedef struct mh_menu {
     int    armed_x, armed_y;    /* the direction was at rest once since the menu opened */
 } mh_menu;
 
-/* opt: the game's settings now (core/options.h). */
-void mh_menu_open(mh_menu *u, const mh_options *opt, int self_test);
+/* opt: the game's settings now (core/options.h); the build running
+ * (mh_config.language, tournament: changed, the game starts again). */
+void mh_menu_open(mh_menu *u, const mh_options *opt, int self_test, int build_language, int build_tournament);
 /* Once a picture while open, after mh_controls_read. */
 int  mh_menu_update(mh_menu *u, mh_config *cfg, mh_controls *ctl, vp_input *in, double now);
 void mh_menu_draw(mh_menu *u, const mh_config *cfg, vp_input *in, vp_dvg *d);

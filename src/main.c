@@ -16,7 +16,10 @@
  * Settings: mhavocpe.ini next to the program, the owner's in save/; the
  * service menu (F2, platform/menu.h) changes them. Controls:
  * platform/controls.h (save/controls.ini). The EEPROM (high scores, the
- * game's options, statistics) is kept in save/eeprom.bin.
+ * game's options, statistics) is kept in save/eeprom.bin, the Tournament
+ * Edition's in save/eeprom_te.bin (its mazes are others; the languages
+ * share one). The build (language, edition, rom/romset.h) is the
+ * settings'.
  */
 #include "avg/avg.h"
 #include "core/emu.h"
@@ -52,20 +55,23 @@
 
 enum { MODE_GAME, MODE_MENU, MODE_PATTERN, MODE_ROLLER_TEST };
 
-#define ORIGINAL_COUNTS 250.0   /* the cabinet's roller: counts a turn (render/config.c) */
+#define ORIGINAL_COUNTS 500.0   /* the cabinet's roller: counts a turn (render/config.c) */
 #define FULL_SPEED      2400.0  /* roller counts a second: Rex at full speed (render/config.c) */
 
 static int rom_paths(int argc, char **argv, const mh_config *cfg, const char **paths)
 {
     int n = 0;
+    /* (a path given as it is, a zip or a folder of files, is the
+     * standard build's; another build is looked for by its name in it) */
+    int standard = !strcmp(mh_romset_variant(cfg->language, cfg->tournament), "mhavocpe");
     const char *arg = mh_arg(argc, argv, "--roms");
     if (arg) {
         n = mh_romset_add_dir(paths, n, MAX_PATHS, arg);
-        paths[n++] = arg;
+        if (standard) paths[n++] = arg;
     }
     if (cfg->rom_path[0]) {
         n = mh_romset_add_dir(paths, n, MAX_PATHS, cfg->rom_path);
-        paths[n++] = cfg->rom_path;
+        if (standard) paths[n++] = cfg->rom_path;
     }
     /* the package's own, next to the program */
     static char pkg[1024];
@@ -120,6 +126,40 @@ static mh_frames frames;
 static mh_enhance enh;
 static int have_sound;
 static char ee_path[1024], cfg_path[1024];
+static int g_argc;
+static char **g_argv;
+static int rom_language, rom_tournament;    /* the build running */
+
+/* The ROMs of the build the settings name: the standard one first (it
+ * brings the speech), then the other build over it. Not found, the
+ * standard one runs. Returns -1 if not even that is found. */
+static int load_roms(void)
+{
+    const char *paths[MAX_PATHS];
+    static mh_romset alt;
+    mh_romset_use("mhavocpe");
+    mh_config std = cfg;
+    std.language = std.tournament = 0;
+    int n = rom_paths(g_argc, g_argv, &std, paths);
+    if (mh_romset_load(&roms, paths, n) != 0) return -1;
+    rom_language = rom_tournament = 0;
+    const char *name = mh_romset_variant(cfg.language, cfg.tournament);
+    if (strcmp(name, "mhavocpe")) {
+        mh_romset_use(name);
+        n = rom_paths(g_argc, g_argv, &cfg, paths);
+        if (mh_romset_load(&alt, paths, n) == 0) {
+            mh_romset_fill(&alt, &roms);
+            roms = alt;
+            rom_language = cfg.language;
+            rom_tournament = cfg.tournament;
+        } else {
+            fprintf(stderr, "mhavocpe: %s not found: the English Promised End runs\n", name);
+        }
+        mh_romset_use("mhavocpe");
+    }
+    snprintf(ee_path, sizeof ee_path, "%s/%s", vp_save_dir(), rom_tournament ? "eeprom_te.bin" : "eeprom.bin");
+    return 0;
+}
 
 static void apply_settings(void)
 {
@@ -396,10 +436,30 @@ static void show(vp_dvg *d, const mh_config *c, const mh_avg_list *pic)
 }
 
 /* The menu left: the settings saved; the game's own changed, into its
- * EEPROM and the game started again to take them. */
+ * EEPROM and the game started again to take them; another build chosen,
+ * the game starts with it (its own EEPROM, the menu's options in it). */
 static void leave_menu(int *mode, mh_menu *menu, mh_app *app)
 {
     mh_config_save(&cfg, cfg_path);
+    if (cfg.language != rom_language || cfg.tournament != rom_tournament) {
+        if (menu->opt_changed) mh_options_put(&m, &menu->opt);
+        eeprom_save(&m, ee_path);
+        if (load_roms() == 0) {
+            static uint8_t ee[sizeof m.eeprom];
+            char buf[256];
+            printf("mhavocpe: now %s from %s\n", mh_romset_describe(&roms, buf, sizeof buf), roms.source);
+            memset(ee, 0xff, sizeof ee);
+            eeprom_load(ee, sizeof ee, ee_path);
+            power_on(ee, m.in.self_test);
+            mh_options_put(&m, &menu->opt);         /* (the options as the menu shows them) */
+            mh_enhance_init(&enh, &m);
+        }
+        /* (a build not found: the one that ran runs on, the setting as it was) */
+        cfg.language = rom_language;
+        cfg.tournament = rom_tournament;
+        mh_config_save(&cfg, cfg_path);
+        menu->opt_changed = 0;
+    }
     if (menu->opt_changed) {
         mh_options_put(&m, &menu->opt);
         eeprom_save(&m, ee_path);
@@ -425,9 +485,9 @@ int main(int argc, char **argv)
     }
     mh_config_load(&cfg, cfg_path);
 
-    const char *paths[MAX_PATHS];
-    int npaths = rom_paths(argc, argv, &cfg, paths);
-    if (mh_romset_load(&roms, paths, npaths) != 0) {
+    g_argc = argc;
+    g_argv = argv;
+    if (load_roms() != 0) {
         char missing[512];
         fprintf(stderr, "mhavocpe: ROMs missing: %s (roms/mhavocpe.zip of the package; --roms PATH)%s\n",
                 mh_romset_missing(&roms, missing, sizeof missing),
@@ -447,7 +507,6 @@ int main(int argc, char **argv)
     static uint8_t ee[sizeof m.eeprom];
     static roller_test rtest;
     static pattern_state pattern;
-    snprintf(ee_path, sizeof ee_path, "%s/eeprom.bin", vp_save_dir());
 
     mh_sound_init(&snd, mh_romset_have(&roms, MH_R_X1) ? roms.x1 : NULL);
     if (!mh_flag(argc, argv, "--nosound")) {
@@ -478,7 +537,7 @@ int main(int argc, char **argv)
             if (mode == MODE_GAME) {
                 mh_options opt;
                 mh_options_get(&m, &opt);
-                mh_menu_open(&menu, &opt, m.in.self_test);
+                mh_menu_open(&menu, &opt, m.in.self_test, rom_language, rom_tournament);
                 mode = MODE_MENU;
                 app.hold_cancel = 1;                /* Esc goes back in the menu, it does not end */
             } else {

@@ -35,5 +35,13 @@
 - Story text placement: `render/enhance.c mh_enhance_patch` (ROM page 0
   3E00/3E20, fixed ROM E418, page 0 2441; STORY_DY). Debugging display
   lists: `mhshot --dump N`.
-- Next: (0.2.8 is on the cabinet), the owner's verdict on the
+- Roller: the game needs about 2400 counts a second for Rex's full speed;
+  the cabinet's roller about 500 a turn (LETA 4x); standard 42 %
+  (`render/config.c`, ORIGINAL_COUNTS in `platform/menu.c` and `main.c`).
+- Builds (language, Tournament Edition): `main.c load_roms`, `leave_menu`;
+  `rom/romset.c` (mh_romset_variant/use/fill); package/roms/*.zip (made
+  from upstream/ROMs/<set>, programs only). Test a build headless:
+  `mhshot --roms upstream/ROMs/mhavocpede --enhance ...`.
+- Next: (0.2.9 is on the cabinet) the owner's verdict on the languages,
+  the Tournament Edition, the joined menu pages, the
   music and the enhancements, the open items in STATUS.md.

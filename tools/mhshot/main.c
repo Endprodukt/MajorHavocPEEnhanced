@@ -119,8 +119,8 @@ static void shot(const mh_machine *m, const char *path)
         mh_config_defaults(&c);
         g_enh.have = 0;
         mh_enhance_apply(&g_enh, c.fx, m, &l, 1.0);
-        printf("  enhance: story %d/%d zoom %.2f about %.0f,%.0f; ram 9b %02X a1 %02X bd %02X c7 %02X 854 %02X 85b %02X\n",
-               g_enh.story_ok, g_enh.story_on, g_enh.zoom, g_enh.cx, g_enh.cy, m->amem[0x9b], m->amem[0xa1], m->amem[0xbd], m->amem[0xc7],
+        printf("  enhance: title %d story %d/%d zoom %.2f about %.0f,%.0f; ram 9b %02X a1 %02X bd %02X c7 %02X 854 %02X 85b %02X\n",
+               g_enh.title_ok, g_enh.story_ok, g_enh.story_on, g_enh.zoom, g_enh.cx, g_enh.cy, m->amem[0x9b], m->amem[0xa1], m->amem[0xbd], m->amem[0xc7],
                m->amem[0x854], m->amem[0x85b]);
     }
     if (mh_svg_write(path, l.lines, l.count) != 0) fprintf(stderr, "mhshot: cannot write %s\n", path);

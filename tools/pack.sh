@@ -9,6 +9,6 @@ rm -rf build/vpk/stage
 mkdir -p $S/roms
 cp build/pi/mhavocpe $S/
 cp package/game.ini package/mhavocpe.ini package/run.sh $S/
-cp package/roms/mhavocpe.zip $S/roms/
+cp package/roms/*.zip $S/roms/
 [ -f package/marquee.png ] && cp package/marquee.png $S/
 sh external/VectorPie/sdk/tools/vp-pack/vp-pack.sh $S build/vpk

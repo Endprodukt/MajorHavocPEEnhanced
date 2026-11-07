@@ -19,17 +19,25 @@ void mh_config_defaults(mh_config *c)
      * 100000, attract sounds, roller x1; 1 coin 1 play */
     c->dsw1 = 0x00;
     c->dsw2 = 0xff;
-    /* The cabinet's roller: a 3.25" roller drives a 0.625" one on a 24
-     * tooth encoder wheel, 5.2 x 24 = about 125 pulses a turn; the LETA
-     * counts each twice (its high resolution, four times, needs R186,
-     * fitted only for the Tempest spinner conversions): about 250 counts a
-     * turn. A 1200 ppr spinner gives 1200 a turn: 21 % makes a turn of it a
-     * turn of the roller. (The game, tw_main.asm and tw_motion.asm: Rex at
-     * full speed from about 48 counts a picture, the ship from about 64.)
+    /* The roller: what the game needs. It reads the LETA every second
+     * interrupt (203 a second), adds half of each change up and halves the
+     * sum each picture (tw_main.asm, tw_motion.asm rgdr); Rex's speed on
+     * the ground goes to twice the sum: full speed ($60) from about 12
+     * counts a read, about 2400 counts a second (measured: 407 interrupts,
+     * 51 pictures a second; the ship from about 3200).
+     * The cabinet's roller: a 3.25" roller drives a 0.625" one on a 24
+     * tooth encoder wheel, 5.2 x 24 = about 125 pulses a turn. The LETA, a
+     * quadrature decoder, counts each 2 or 4 times; at 2 (250 a turn) Rex's
+     * full speed took 10 turns of the big roller a second, so the cabinet
+     * counted 4 times: about 500 a turn, full speed from 5 turns a second,
+     * a swipe of the hand on its 10" round.
+     * A 1200 ppr spinner gives 1200 a turn: 42 % makes a turn of it a turn
+     * of the roller (the menu's ONE TURN AS THE ORIGINAL; the owner had
+     * found 41 % by feel on the cabinet).
      * A stick all the way: 2400 counts a second (Rex's full speed);
      * rolling digitally: 1600, about two thirds of it. */
     snprintf(c->roller, sizeof c->roller, "dial");
-    c->spin_sens = 21.0f;
+    c->spin_sens = 42.0f;
     c->spin_ppr = 1200.0f;
     c->stick_speed = 2400.0f;
     c->key_speed = 1600.0f;
@@ -55,8 +63,12 @@ static char *trim(char *s)
     return s;
 }
 
-static int set(mh_config *c, const char *key, const char *val)
+/* The settings' version: 2 since 0.2.9 (the roller's standard 42 %). */
+#define SETTINGS_VERSION 2
+
+static int set(mh_config *c, const char *key, const char *val, int *version)
 {
+    if (!strcmp(key, "settings_version")) { *version = atoi(val); return 0; }
     struct { const char *k; float *f; } floats[] = {
         { "size_x", &c->size_x }, { "size_y", &c->size_y }, { "brightness", &c->brightness },
         { "gamma", &c->gamma }, { "board_hz", &c->board_hz }, { "spin_sens", &c->spin_sens },
@@ -68,6 +80,7 @@ static int set(mh_config *c, const char *key, const char *val)
         { "pos_x", &c->pos_x }, { "pos_y", &c->pos_y },
         { "flip_x", &c->flip_x }, { "flip_y", &c->flip_y },
         { "spin_reverse", &c->spin_reverse }, { "menu_hold", &c->menu_hold },
+        { "language", &c->language }, { "tournament", &c->tournament },
     };
     for (unsigned i = 0; i < sizeof floats / sizeof floats[0]; i++)
         if (!strcmp(key, floats[i].k)) { *floats[i].f = (float)atof(val); return 0; }
@@ -90,6 +103,7 @@ int mh_config_load(mh_config *c, const char *path)
     FILE *f = fopen(path, "r");
     if (!f) return -1;
     char line[1024];
+    int version = 1;
     while (fgets(line, sizeof line, f)) {
         char *p = trim(line);
         if (!*p || *p == ';' || *p == '#') continue;
@@ -97,11 +111,15 @@ int mh_config_load(mh_config *c, const char *path)
         if (!eq) continue;
         *eq = '\0';
         char *key = trim(p), *val = trim(eq + 1);
-        if (set(c, key, val) != 0) fprintf(stderr, "%s: setting not understood: %s = %s\n", path, key, val);
+        if (set(c, key, val, &version) != 0) fprintf(stderr, "%s: setting not understood: %s = %s\n", path, key, val);
     }
     fclose(f);
     /* (0.1/0.2.0 wrote the keys' speed in sixteens of a count) */
     if (c->key_speed > 0.0f && c->key_speed < 50.0f) c->key_speed *= 16.0f;
+    /* (up to 0.2.8 the roller's standard was 21 %, the LETA reckoned to
+     * count twice; a file of then holding it takes the new standard, an
+     * owner's own value stays) */
+    if (version < 2 && c->spin_sens == 21.0f) c->spin_sens = 42.0f;
     return 0;
 }
 
@@ -110,6 +128,7 @@ int mh_config_save(const mh_config *c, const char *path)
     FILE *f = fopen(path, "w");
     if (!f) return -1;
     fprintf(f, "; Major Havoc PE Enhanced: the owner's settings (see the README)\n");
+    fprintf(f, "settings_version = %d\n", SETTINGS_VERSION);
     fprintf(f, "rom_path = %s\n", c->rom_path);
     fprintf(f, "smooth = %d\nsteady = %d\n", c->smooth, c->steady);
     fprintf(f, "size_x = %.3f\nsize_y = %.3f\npos_x = %d\npos_y = %d\nflip_x = %d\nflip_y = %d\n",
@@ -121,6 +140,7 @@ int mh_config_save(const mh_config *c, const char *path)
             c->roller, c->spin_sens, c->spin_ppr, c->spin_reverse, c->stick_speed, c->key_speed, c->menu_hold);
     fprintf(f, "volume = %.2f\nspeech = %.2f\nsteady_music = %d\n", c->volume, c->speech, c->steady_music);
     for (int i = 0; i < MH_FX_COUNT; i++) fprintf(f, "fx_%s = %d\n", FX_NAME[i], c->fx[i]);
+    fprintf(f, "language = %d\ntournament = %d\n", c->language, c->tournament);
     fclose(f);
     return 0;
 }

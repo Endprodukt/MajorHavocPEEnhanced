@@ -23,14 +23,19 @@
  * (vgscalz 2); a line goes when it scrolls above the middle, and the
  * generator's window (tw_main.asm, E418: VGADD_SCALE(ywin_on,1,0) with the
  * beam in the middle) cuts off what is above the middle. Ours, in page 0's
- * free room (3DEB-3FFE, FF), in the attract mode (gamest D7 clear; the end
- * story is played in a game): a dark vector up after each line's CNTR, and
- * the beam moved up as much before the window is set (E418 then calls
- * stpg0 first, which selects page 0, then ours). */
+ * free room (its FF at the end, before the checksum at 3FFF), in the
+ * attract mode (gamest D7 clear; the end story is played in a game): a
+ * dark vector up after each line's CNTR, and the beam moved up as much
+ * before the window is set (the window's call then calls stpg0 first,
+ * which selects page 0, then ours).
+ * The six builds (English, German, French, each also as the Tournament
+ * Edition) have the story's call at the same place; the window's is
+ * looked for (E418, the Tournament Edition's E408), and the free room
+ * (English 3DEB, German 3E31, French 3F4C on): ours at 3E00 or the first
+ * 16 bytes' boundary in it. */
 #define STORY_CALL   0x0508     /* in page 0: jsr vgcntr; ldx #vdata; jsr vgvctr */
-#define STORY_OURS   0x1e00     /* in page 0: ours (alpha 3E00) */
-#define WIN_CALL     0xe418     /* lda #0; ldx #$79; jsr vgadd2; jsr stpg0 */
-#define WIN_OURS     0x1e20     /* in page 0: ours (alpha 3E20) */
+#define STORY_OURS   0x1e00     /* in page 0: ours if free (alpha 3E00); the window's 0x20 on */
+#define OURS_SIZE    0x40
 #define LINES_AT     0x0441     /* in page 0: scormsg's ldx #06, the lines it draws less 1 */
 #define STORY_DY     64         /* the vector up, in the list's units (binary scale 2) */
 #define VG_CNTR      0xd684
@@ -38,6 +43,7 @@
 
 #define HS_TOP       50.0f      /* the high scores: below this the table, */
 #define HS_LIFT      26.0f      /* lifted this much */
+#define TEXT_MARGIN  6.0f       /* a page of text: room beside its widest line */
 
 #define SUB_WIDTH    0.70f      /* the subtitle's lettering: this much of MAJOR HAVOC's width */
 #define SUB_GAP      3.0f       /* generator units between HAVOC and the subtitle */
@@ -72,6 +78,9 @@ static void level_subtitle(void)
     }
 }
 
+/* the window's call: lda #0; ldx #$79; jsr vgadd2; jsr stpg0 */
+static const uint8_t WIN_CODE[10] = { 0xa9, 0x00, 0xa2, 0x79, 0x20, 0x88, 0xd6, 0x20, 0x34, 0xd3 };
+
 void mh_enhance_init(mh_enhance *e, const mh_machine *m)
 {
     level_subtitle();
@@ -82,18 +91,27 @@ void mh_enhance_init(mh_enhance *e, const mh_machine *m)
     static const uint8_t HAVOC1[4] = { 0xea, 0x1f, 0xf0, 0x00 }, HAVOC3[4] = { 0xdc, 0x1f, 0x1c, 0x1f };
     e->title_ok = !memcmp(m->amem + 0x4000 + AVG_HAVOC1, HAVOC1, 4) && !memcmp(m->amem + 0x4000 + AVG_HAVOC3, HAVOC3, 4);
     static const uint8_t CALL[8] = { 0x20, 0x84, 0xd6, 0xa2, 0x1f, 0x20, 0xc5, 0xd6 };
-    static const uint8_t WIN[10] = { 0xa9, 0x00, 0xa2, 0x79, 0x20, 0x88, 0xd6, 0x20, 0x34, 0xd3 };
-    e->story_ok = !memcmp(m->paged + STORY_CALL, CALL, 8) && !memcmp(m->amem + WIN_CALL, WIN, 10)
-                  && m->paged[LINES_AT - 1] == 0xa2 && m->paged[LINES_AT] == 0x06;
-    for (int a = STORY_OURS; a < STORY_OURS + 0x40; a++) e->story_ok &= m->paged[a] == 0xff;
+    /* the window's call: once in the fixed program (C000-FFFF) */
+    e->win_call = 0;
+    for (int a = 0xc000; a <= 0x10000 - (int)sizeof WIN_CODE; a++) {
+        if (memcmp(m->amem + a, WIN_CODE, sizeof WIN_CODE)) continue;
+        e->win_call = e->win_call ? -1 : a;
+    }
+    /* the free room at page 0's end */
+    int free = 0x1fff;
+    while (free > 0 && m->paged[free - 1] == 0xff) free--;
+    e->ours = free <= STORY_OURS ? STORY_OURS : (free + 0x0f) & ~0x0f;
+    e->story_ok = !memcmp(m->paged + STORY_CALL, CALL, 8) && e->win_call > 0
+                  && m->paged[LINES_AT - 1] == 0xa2 && m->paged[LINES_AT] == 0x06 && e->ours + OURS_SIZE <= 0x1fff;
 }
 
 void mh_enhance_patch(mh_enhance *e, const int *fx, mh_machine *m)
 {
     int want = e->story_ok && fx[MH_FX_FIT] && !m->in.self_test;
     if (want == e->story_on) return;
-    uint8_t *call = m->paged + STORY_CALL, *ours = m->paged + STORY_OURS;
-    uint8_t *wcall = m->amem + WIN_CALL, *wours = m->paged + WIN_OURS;
+    uint8_t *call = m->paged + STORY_CALL, *ours = m->paged + e->ours;
+    uint8_t *wcall = m->amem + e->win_call, *wours = m->paged + e->ours + 0x20;
+    const int at = 0x2000 + e->ours, wat = at + 0x20;   /* the alpha's addresses */
     if (want) {
         const int dy = STORY_DY / 2;                    /* (at binary scale 1) */
         const uint8_t win[] = {
@@ -109,7 +127,7 @@ void mh_enhance_patch(mh_enhance *e, const int *fx, mh_machine *m)
             0x4c, VG_ADD2 & 0xff, VG_ADD2 >> 8,         /* jmp vgadd2 */
         };
         memcpy(wours, win, sizeof win);
-        const uint8_t wc[10] = { 0x20, 0x34, 0xd3, 0x20, 0x20, 0x3e, 0xea, 0xea, 0xea, 0xea };  /* jsr stpg0; jsr 3E20 */
+        const uint8_t wc[10] = { 0x20, 0x34, 0xd3, 0x20, wat & 0xff, wat >> 8, 0xea, 0xea, 0xea, 0xea };  /* jsr stpg0; jsr ours */
         memcpy(wcall, wc, 10);
         m->paged[LINES_AT] = 0x07;                      /* a line more: the list starts higher */
         const uint8_t code[] = {
@@ -125,12 +143,11 @@ void mh_enhance_patch(mh_enhance *e, const int *fx, mh_machine *m)
             0x60,                                       /* done: rts */
         };
         memcpy(ours, code, sizeof code);
-        call[1] = 0x00; call[2] = 0x3e;                 /* jsr 3E00 */
+        call[1] = at & 0xff; call[2] = at >> 8;         /* jsr ours */
     } else {
         call[1] = VG_CNTR & 0xff; call[2] = VG_CNTR >> 8;
         memset(ours, 0xff, 0x20);
-        static const uint8_t WIN[10] = { 0xa9, 0x00, 0xa2, 0x79, 0x20, 0x88, 0xd6, 0x20, 0x34, 0xd3 };
-        memcpy(wcall, WIN, 10);
+        memcpy(wcall, WIN_CODE, sizeof WIN_CODE);
         m->paged[LINES_AT] = 0x06;
         memset(wours, 0xff, 0x20);
     }
@@ -211,7 +228,10 @@ static void subtitle(const mh_machine *m, mh_avg_list *pic)
 typedef struct fbox { float x0, x1, y0, y1; } fbox;
 
 /* What the screen uses (measured over long runs, render/enhance.h);
- * 0: all of the field. */
+ * 0: all of the field; 2: a page of text, as wide as its lines are at
+ * least (the German and French texts are wider than the English); 3: the
+ * story, as wide as its widest line so far (it scrolls: the zoom eases
+ * once, then stays). */
 static int screen_box(const int *fx, const mh_machine *m, fbox *b)
 {
     int game = m->amem[RAM_GAMEST] & 0x80, page = m->amem[RAM_FRAME1];
@@ -227,15 +247,15 @@ static int screen_box(const int *fx, const mh_machine *m, fbox *b)
     if (!fx[MH_FX_FIT] || game) return 0;
     if (page == 0x06 || page == 0x07) {
         *b = (fbox){ -74.0f, 96.0f, -100.0f + HS_LIFT, 89.0f };  /* the high scores (-66..88, -92..81; the table lifted), a margin */
-        return 1;
+        return 2;
     }
     if (page >= 0xe0) {
         *b = (fbox){ -70.0f, 92.0f, -95.0f, 111.0f };           /* info */
-        return 1;
+        return 2;
     }
     if (page >= 0x08 && page <= 0x1d) {
         *b = (fbox){ -121.0f, 129.0f, -131.0f, 95.0f };         /* the title and the story */
-        return 1;
+        return m->amem[RAM_ANIMATE] == 3 ? 3 : 1;               /* (the title settled: the story) */
     }
     return 0;
 }
@@ -265,7 +285,19 @@ static void fit(mh_enhance *e, const int *fx, const mh_machine *m, mh_avg_list *
 {
     fbox b;
     float tz = 1.0f, tx = 0.0f, ty = 0.0f;
-    if (screen_box(fx, m, &b)) {
+    int kind = screen_box(fx, m, &b);
+    if (kind == 2 || kind == 3) {
+        for (int i = 0; i < pic->count; i++) {
+            const mh_line *l = &pic->lines[i];
+            b.x0 = fminf(b.x0, fminf(l->x0, l->x1) - TEXT_MARGIN);
+            b.x1 = fmaxf(b.x1, fmaxf(l->x0, l->x1) + TEXT_MARGIN);
+        }
+    }
+    if (kind == 3) {
+        e->story_x0 = b.x0 = fminf(b.x0, e->story_x0);
+        e->story_x1 = b.x1 = fmaxf(b.x1, e->story_x1);
+    }
+    if (kind) {
         float sx = 2.0f * FIELD_X / (b.x1 - b.x0), sy = 2.0f * FIELD_Y / (b.y1 - b.y0);
         tz = sx < sy ? sx : sy;
         if (tz < 1.0f) tz = 1.0f;

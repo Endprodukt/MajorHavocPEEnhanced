@@ -8,24 +8,25 @@
 
 enum {
     L_GAP = 0,
-    L_PAGE_CONTROLS, L_PAGE_ROLLER, L_PAGE_GAME, L_PAGE_CREDIT, L_PAGE_SOUND, L_PAGE_PICTURE,
+    L_PAGE_CONTROLS, L_PAGE_GAME, L_PAGE_CREDIT, L_PAGE_SOUND, L_PAGE_PICTURE,
     L_SELF_TEST, L_RESET_SCORES, L_EXIT, L_BACK,
     L_MENU_HOLD, L_DEFAULTS,
     L_SENS, L_REVERSE, L_KEY_SPEED, L_RSOURCE, L_PPR, L_ONE_TO_ONE, L_TURN_NOTE, L_STICK_SPEED, L_ROLLER_TEST,
-    L_LIVES, L_DIFFICULTY, L_BONUS, L_ROLLER_X2, L_RESTART_NOTE,
+    L_LIVES, L_DIFFICULTY, L_BONUS, L_ROLLER_X2, L_RESTART_NOTE, L_LANGUAGE, L_EDITION,
     L_PRICE,
     L_VOLUME, L_SPEECH, L_ATTRACT, L_MUSIC_TEMPO,
     L_SMOOTH, L_STEADY, L_BOARD_HZ, L_SIZE, L_WIDTH, L_HEIGHT, L_POS_X, L_POS_Y, L_FLIP_X, L_FLIP_Y, L_BRIGHT,
-    L_PATTERN, L_PAGE_FX, L_FX_ALL_ON, L_FX_ALL_OFF,
+    L_PATTERN, L_FX_ALL_ON, L_FX_ALL_OFF,
+    L_HEAD_ROLLER, L_HEAD_FX,   /* headings within a page */
     L_FX0, L_FX_LAST = L_FX0 + MH_FX_COUNT - 1,
     L_FN0,                      /* + MH_FN_xxx */
     L_END = 0xff
 };
 
-enum { P_MAIN, P_CONTROLS, P_ROLLER, P_GAME, P_CREDIT, P_SOUND, P_PICTURE, P_FX, N_PAGES };
+enum { P_MAIN, P_CONTROLS, P_GAME, P_CREDIT, P_SOUND, P_PICTURE, N_PAGES };
 static const char *const TITLE[N_PAGES] = {
-    "MAJOR HAVOC PE ENHANCED  SERVICE MENU", "CONTROLS", "ROLLER", "GAME SETTINGS", "CREDIT SETTINGS",
-    "SOUND SETTINGS", "PICTURE", "ENHANCEMENTS",
+    "MAJOR HAVOC PE ENHANCED  SERVICE MENU", "CONTROLS", "GAME SETTINGS", "CREDIT SETTINGS",
+    "SOUND SETTINGS", "PICTURE",
 };
 
 static const char *const FX_LABEL[MH_FX_COUNT] = {
@@ -35,6 +36,7 @@ static const char *const FX_LABEL[MH_FX_COUNT] = {
 static const char *const FN_LABEL[MH_FN_COUNT] = {
     "JUMP  BUTTON 1", "SHIELD  BUTTON 2", "ROLL LEFT", "ROLL RIGHT", "AUX COIN  SELF TEST NEXT", "SERVICE MENU",
 };
+static const char *const LANGUAGE[3] = { "ENGLISH", "DEUTSCH", "FRANCAIS" };
 static const char *const DIFFICULTY[4] = { "EASY", "MEDIUM", "HARD", "DEMO" };
 static const char *const BONUS[4] = { "NONE", "50000", "100000", "200000" };
 static const char *const PRICE[4] = { "FREE PLAY", "1 COIN 2 PLAYS", "1 COIN 1 PLAY", "2 COINS 1 PLAY" };
@@ -48,16 +50,19 @@ static int page_lines(int page, uint8_t *out)
     int n = 0;
 #define ADD(l) out[n++] = (uint8_t)(l)
     switch (page) {
-    case P_CONTROLS:
+    case P_CONTROLS:            /* the buttons, then the roller */
         for (int f = 0; f < MH_FN_COUNT; f++) ADD(L_FN0 + f);
-        ADD(L_MENU_HOLD); ADD(L_GAP); ADD(L_DEFAULTS); ADD(L_BACK);
+        ADD(L_MENU_HOLD); ADD(L_DEFAULTS); ADD(L_GAP);
+        ADD(L_HEAD_ROLLER); ADD(L_RSOURCE); ADD(L_SENS); ADD(L_TURN_NOTE); ADD(L_PPR); ADD(L_ONE_TO_ONE);
+        ADD(L_REVERSE); ADD(L_ROLLER_X2); ADD(L_STICK_SPEED); ADD(L_KEY_SPEED); ADD(L_ROLLER_TEST);
+        ADD(L_GAP); ADD(L_BACK);
         break;
-    case P_ROLLER:
-        ADD(L_RSOURCE); ADD(L_SENS); ADD(L_TURN_NOTE); ADD(L_PPR); ADD(L_ONE_TO_ONE); ADD(L_REVERSE); ADD(L_ROLLER_X2);
-        ADD(L_GAP); ADD(L_STICK_SPEED); ADD(L_KEY_SPEED); ADD(L_GAP); ADD(L_ROLLER_TEST); ADD(L_BACK);
-        break;
-    case P_GAME:
-        ADD(L_LIVES); ADD(L_DIFFICULTY); ADD(L_BONUS); ADD(L_ROLLER_X2); ADD(L_GAP); ADD(L_RESTART_NOTE); ADD(L_BACK);
+    case P_GAME:                /* the game's options, then the enhancements */
+        ADD(L_LANGUAGE); ADD(L_EDITION);
+        ADD(L_LIVES); ADD(L_DIFFICULTY); ADD(L_BONUS); ADD(L_ROLLER_X2); ADD(L_RESTART_NOTE); ADD(L_GAP);
+        ADD(L_HEAD_FX);
+        for (int f = 0; f < MH_FX_COUNT; f++) ADD(L_FX0 + f);
+        ADD(L_FX_ALL_ON); ADD(L_FX_ALL_OFF); ADD(L_GAP); ADD(L_BACK);
         break;
     case P_CREDIT:
         ADD(L_PRICE); ADD(L_GAP); ADD(L_RESTART_NOTE); ADD(L_BACK);
@@ -70,13 +75,9 @@ static int page_lines(int page, uint8_t *out)
         ADD(L_SIZE); ADD(L_WIDTH); ADD(L_HEIGHT); ADD(L_POS_X); ADD(L_POS_Y); ADD(L_FLIP_X); ADD(L_FLIP_Y);
         ADD(L_BRIGHT); ADD(L_GAP); ADD(L_PATTERN); ADD(L_BACK);
         break;
-    case P_FX:
-        for (int f = 0; f < MH_FX_COUNT; f++) ADD(L_FX0 + f);
-        ADD(L_GAP); ADD(L_FX_ALL_ON); ADD(L_FX_ALL_OFF); ADD(L_GAP); ADD(L_BACK);
-        break;
     default:
-        ADD(L_PAGE_CONTROLS); ADD(L_PAGE_ROLLER); ADD(L_PAGE_GAME); ADD(L_PAGE_CREDIT); ADD(L_PAGE_SOUND);
-        ADD(L_PAGE_PICTURE); ADD(L_PAGE_FX); ADD(L_GAP); ADD(L_SELF_TEST); ADD(L_RESET_SCORES); ADD(L_GAP); ADD(L_EXIT);
+        ADD(L_PAGE_CONTROLS); ADD(L_PAGE_GAME); ADD(L_PAGE_CREDIT); ADD(L_PAGE_SOUND);
+        ADD(L_PAGE_PICTURE); ADD(L_GAP); ADD(L_SELF_TEST); ADD(L_RESET_SCORES); ADD(L_GAP); ADD(L_EXIT);
         break;
     }
 #undef ADD
@@ -85,9 +86,12 @@ static int page_lines(int page, uint8_t *out)
 }
 
 /* The line chosen (gaps and notes cannot be chosen). */
-static int selectable(int line) { return line != L_GAP && line != L_RESTART_NOTE && line != L_TURN_NOTE; }
+static int selectable(int line)
+{
+    return line != L_GAP && line != L_RESTART_NOTE && line != L_TURN_NOTE && line != L_HEAD_ROLLER && line != L_HEAD_FX;
+}
 
-#define ORIGINAL_COUNTS 250.0f  /* the cabinet's roller: counts a turn (render/config.c) */
+#define ORIGINAL_COUNTS 500.0f  /* the cabinet's roller: counts a turn (render/config.c) */
 
 static float clampf(float v, float lo, float hi) { return v < lo ? lo : v > hi ? hi : v; }
 
@@ -122,7 +126,7 @@ int mh_menu_on_picture(const mh_menu *u)
     return u->open && u->page == P_PICTURE;
 }
 
-void mh_menu_open(mh_menu *u, const mh_options *opt, int self_test)
+void mh_menu_open(mh_menu *u, const mh_options *opt, int self_test, int build_language, int build_tournament)
 {
     u->open = 1;
     u->page = P_MAIN;
@@ -132,6 +136,8 @@ void mh_menu_open(mh_menu *u, const mh_options *opt, int self_test)
     u->opt = *opt;
     u->orig = *opt;
     u->opt_changed = 0;
+    u->build_language = build_language;
+    u->build_tournament = build_tournament;
     u->rcap = u->radding = u->rep_n = 0;
     u->armed_x = u->armed_y = 0;
     memset(&u->cap, 0, sizeof u->cap);
@@ -268,12 +274,10 @@ int mh_menu_update(mh_menu *u, mh_config *cfg, mh_controls *ctl, vp_input *in, d
     mh_options *o = &u->opt;
     switch (line) {
     case L_PAGE_CONTROLS: if (fire) { u->page = P_CONTROLS; vp_capture_moved(&u->cap); } break;
-    case L_PAGE_ROLLER:   if (fire) u->page = P_ROLLER; break;
     case L_PAGE_GAME:     if (fire) u->page = P_GAME; break;
     case L_PAGE_CREDIT:   if (fire) u->page = P_CREDIT; break;
     case L_PAGE_SOUND:    if (fire) u->page = P_SOUND; break;
     case L_PAGE_PICTURE:  if (fire) u->page = P_PICTURE; break;
-    case L_PAGE_FX:       if (fire) u->page = P_FX; break;
     case L_FX_ALL_ON:
     case L_FX_ALL_OFF:
         if (!fire) break;
@@ -304,6 +308,8 @@ int mh_menu_update(mh_menu *u, mh_config *cfg, mh_controls *ctl, vp_input *in, d
     case L_ROLLER_TEST:   if (fire) return MH_MENU_ROLLER_TEST; break;
     case L_REVERSE:       cfg->spin_reverse = !cfg->spin_reverse; return MH_MENU_CHANGED;
     case L_KEY_SPEED:     cfg->key_speed = clampf(cfg->key_speed + (float)(d * mult * 50), 50.0f, 20000.0f); return MH_MENU_CHANGED;
+    case L_LANGUAGE:      cfg->language = step(cfg->language, d, 0, 2); return MH_MENU_CHANGED;
+    case L_EDITION:       cfg->tournament = !cfg->tournament; return MH_MENU_CHANGED;
     case L_LIVES:         o->lives = step(o->lives, d, 3, 6); u->opt_changed = 1; break;
     case L_DIFFICULTY:    o->difficulty = step(o->difficulty, d, 0, 3); u->opt_changed = 1; break;
     case L_BONUS:         o->bonus = step(o->bonus, d, 0, 3); u->opt_changed = 1; break;
@@ -339,6 +345,12 @@ int mh_menu_update(mh_menu *u, mh_config *cfg, mh_controls *ctl, vp_input *in, d
 
 /* --- drawing ------------------------------------------------------------------------ */
 
+/* The game will start again on leaving: its options or its build changed. */
+static int restart_due(const mh_menu *u, const mh_config *cfg)
+{
+    return u->opt_changed || cfg->language != u->build_language || cfg->tournament != u->build_tournament;
+}
+
 static void describe(int line, const mh_menu *u, const mh_config *cfg, vp_input *in, const char **label, char *value,
                      size_t size)
 {
@@ -366,10 +378,10 @@ static void describe(int line, const mh_menu *u, const mh_config *cfg, vp_input 
     }
     switch (line) {
     case L_PAGE_CONTROLS: *label = "CONTROLS"; break;
-    case L_PAGE_FX:       *label = "ENHANCEMENTS"; break;
+    case L_HEAD_FX:       *label = "ENHANCEMENTS"; break;
     case L_FX_ALL_ON:     *label = "ALL ON"; break;
     case L_FX_ALL_OFF:    *label = "ALL OFF  AS THE ORIGINAL"; break;
-    case L_PAGE_ROLLER:   *label = "ROLLER"; break;
+    case L_HEAD_ROLLER:   *label = "ROLLER"; break;
     case L_PAGE_GAME:     *label = "GAME SETTINGS"; break;
     case L_PAGE_CREDIT:   *label = "CREDIT SETTINGS"; break;
     case L_PAGE_SOUND:    *label = "SOUND SETTINGS"; break;
@@ -379,10 +391,10 @@ static void describe(int line, const mh_menu *u, const mh_config *cfg, vp_input 
     case L_EXIT:          *label = "SAVE AND EXIT"; break;
     case L_BACK:          *label = "BACK"; break;
     case L_MENU_HOLD:     *label = "START 1 AND JUMP HELD"; snprintf(value, size, "%s", cfg->menu_hold ? "OPENS MENU" : "OFF"); break;
-    case L_DEFAULTS:      *label = "ALL BACK TO STANDARD"; break;
+    case L_DEFAULTS:      *label = "ALL BUTTONS BACK TO STANDARD"; break;
     case L_SENS:          *label = "SENSITIVITY"; snprintf(value, size, "%.1f %%", cfg->spin_sens); break;
     case L_RSOURCE:
-        *label = "ROLLER";
+        *label = "TURNED BY";
         if (u->rcap) snprintf(value, size, "MOVE THE CONTROL");
         else mh_roller_spelled(cfg->roller, value, (int)size);
         break;
@@ -401,7 +413,9 @@ static void describe(int line, const mh_menu *u, const mh_config *cfg, vp_input 
     case L_DIFFICULTY:    *label = "DIFFICULTY"; snprintf(value, size, "%s", DIFFICULTY[o->difficulty & 3]); break;
     case L_BONUS:         *label = "BONUS LIFE"; snprintf(value, size, "%s", BONUS[o->bonus & 3]); break;
     case L_ROLLER_X2:     *label = "ROLLER MULTIPLIER"; snprintf(value, size, "%s", o->roller_x2 ? "X2" : "X1"); break;
-    case L_RESTART_NOTE:  *label = u->opt_changed ? "CHANGED  THE GAME STARTS AGAIN ON EXIT" : "A CHANGE STARTS THE GAME AGAIN"; break;
+    case L_LANGUAGE:      *label = "LANGUAGE"; snprintf(value, size, "%s", LANGUAGE[cfg->language % 3]); break;
+    case L_EDITION:       *label = "EDITION"; snprintf(value, size, "%s", cfg->tournament ? "TOURNAMENT" : "THE PROMISED END"); break;
+    case L_RESTART_NOTE:  *label = restart_due(u, cfg) ? "CHANGED  THE GAME STARTS AGAIN ON EXIT" : "A CHANGE STARTS THE GAME AGAIN"; break;
     case L_PRICE:         *label = "PRICE"; snprintf(value, size, "%s", PRICE[o->price & 3]); break;
     case L_VOLUME:        *label = "VOLUME"; snprintf(value, size, "%d", (int)(cfg->volume * 10.0f + 0.5f)); break;
     case L_SPEECH:        *label = "SPEECH"; snprintf(value, size, "%d", (int)(cfg->speech * 10.0f + 0.5f)); break;
@@ -434,8 +448,9 @@ void mh_menu_text(vp_dvg *d, const char *s, float y, float h, int highlight)
 void mh_menu_draw(mh_menu *u, const mh_config *cfg, vp_input *in, vp_dvg *d)
 {
     int page = u->page >= 0 && u->page < N_PAGES ? u->page : P_MAIN;
-    const float STEP = 170.0f, GAP = 90.0f, H = 78.0f;
+    float STEP = 170.0f, GAP = 90.0f, H = 78.0f;
     const float LEFT = 520.0f, RIGHT = 3600.0f;
+    const float ROOM = 3000.0f;     /* between the title and the help lines */
     uint8_t lines[PAGE_MAX + 1];
     page_lines(page, lines);
 
@@ -444,7 +459,12 @@ void mh_menu_draw(mh_menu *u, const mh_config *cfg, vp_input *in, vp_dvg *d)
     vp_text(d, TITLE[page], 2048, 3740, 95, VP_TEXT_CENTER);
 
     float height = 0.0f;
-    for (int i = 0; lines[i] != L_END; i++) height += lines[i] ? STEP : GAP;
+    for (int i = 0; lines[i] != L_END; i++)
+        height += !lines[i] ? GAP : lines[i] == L_TURN_NOTE ? STEP * 0.7f : STEP;
+    if (height > ROOM) {            /* a long page set closer */
+        float s = ROOM / height;
+        STEP *= s; GAP *= s; H *= s; height = ROOM;
+    }
     float y = 2048.0f + height * 0.5f - STEP * 0.5f + 60.0f;
     int k = 0, chosen_id = L_GAP;
     for (int i = 0; lines[i] != L_END; i++) {
@@ -461,8 +481,14 @@ void mh_menu_draw(mh_menu *u, const mh_config *cfg, vp_input *in, vp_dvg *d)
             y -= STEP * 0.7f;
             continue;
         }
+        if (line == L_HEAD_ROLLER || line == L_HEAD_FX) {
+            vp_color(d, 255, 220, 60);
+            vp_text(d, label, LEFT, y, H * 0.85f, VP_TEXT_LEFT);
+            y -= STEP;
+            continue;
+        }
         if (line == L_RESTART_NOTE) {
-            if (u->opt_changed) vp_color(d, 255, 120, 60);
+            if (restart_due(u, cfg)) vp_color(d, 255, 120, 60);
             else vp_color(d, 110, 130, 255);
             vp_text(d, label, LEFT, y, H * 0.75f, VP_TEXT_LEFT);
             y -= STEP;
@@ -472,9 +498,10 @@ void mh_menu_draw(mh_menu *u, const mh_config *cfg, vp_input *in, vp_dvg *d)
         if (chosen) {
             chosen_id = line;
             vp_color(d, 255, 255, 255);
-            vp_moveto(d, (int)LEFT - 160, (int)y + 70);
-            vp_lineto(d, (int)LEFT - 70, (int)y + 38);
-            vp_lineto(d, (int)LEFT - 160, (int)y + 6);
+            float a = H / 78.0f;     /* the arrow as large as the text */
+            vp_moveto(d, (int)LEFT - 160, (int)(y + 70.0f * a));
+            vp_lineto(d, (int)LEFT - 70, (int)(y + 38.0f * a));
+            vp_lineto(d, (int)LEFT - 160, (int)(y + 6.0f * a));
         } else {
             vp_color(d, 60, 200, 90);
         }

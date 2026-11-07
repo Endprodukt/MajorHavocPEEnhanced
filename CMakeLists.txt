@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 
-project(mhavocpe_enhanced VERSION 0.2.8 LANGUAGES C CXX)
+project(mhavocpe_enhanced VERSION 0.2.9 LANGUAGES C CXX)
 
 # Builds: see BUILD.md.
 

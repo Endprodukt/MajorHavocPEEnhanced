@@ -19,6 +19,13 @@
  *   6C         136002-125, the vector generator's state PROM (optional:
  *              its exact timing)
  *
+ * The Promised End comes in six builds (upstream/ROMs): English, German,
+ * French, each as The Promised End and as the Tournament Edition (other
+ * mazes). The package brings all six: mhavocpe.zip complete, the other
+ * five (mhavocpede, mhavocpefr, mhavocpete, mhavocpedete, mhavocpefrte:
+ * HBMAME's names) with their programs only; speech (the same in all six)
+ * and 6C come from mhavocpe's (mh_romset_fill).
+ *
  * Builds with LPC speech (a 32K 9S for the TMS5220) are not supported
  * yet. Each ROM begins with four bytes: its position, the language (0
  * English, 1 German, 2 French), the version (major, minor).
@@ -39,6 +46,18 @@ typedef struct mh_romset {
     int      lpc;               /* a build with LPC speech was found (not supported) */
     char     source[1024];      /* the zip or folder it came from */
 } mh_romset;
+
+/* The build's name: language 0 English, 1 German, 2 French; tournament
+ * 1 the Tournament Edition. */
+const char *mh_romset_variant(int language, int tournament);
+
+/* Which build the search paths name (mh_romset_add_dir,
+ * mh_romset_default_paths): "mhavocpe" (as standard: <dir>/mhavocpe.zip and
+ * <dir> itself) or another (<dir>/<name>.zip and <dir>/<name>/). */
+void mh_romset_use(const char *name);
+
+/* The optional parts (speech, 6C) rs lacks, from another set. */
+void mh_romset_fill(mh_romset *rs, const mh_romset *from);
 
 /* Look in each path (a .zip or a directory) in order until one holds a
  * complete set. Returns 0 when the game can run; otherwise -1 and

@@ -26,8 +26,9 @@
  * The screens are told by the game's RAM (PE 1.01's addresses, from its
  * listings): gamest D7 (a game is played), frame+1 (the attract mode's
  * page), tact D7 (the tactical display), brstat D7, animate, perm1, perm2
- * (the title's phases, place and zoom). The title's routines are checked
- * in the vector ROM (another build: SUBTITLE stays off).
+ * (the title's phases, place and zoom); the same in all six builds of 1.01
+ * (rom/romset.h). The title's routines are checked in the vector ROM, the
+ * story's in the program (another build: they stay off).
  */
 #ifndef MH_ENHANCE_H
 #define MH_ENHANCE_H
@@ -42,6 +43,9 @@ typedef struct mh_enhance {
     int   have;
     int   story_ok;         /* the program holds PE 1.01's story routine and room for ours */
     int   story_on;         /* ours is patched in */
+    int   win_call;         /* the window's call in the fixed program (the builds differ) */
+    int   ours;             /* in page 0: ours (the builds' free room differs) */
+    float story_x0, story_x1;   /* the story's widest line so far (FIT) */
 } mh_enhance;
 
 /* Once, with the machine holding its ROMs. */

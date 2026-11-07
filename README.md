@@ -11,9 +11,15 @@ the OKI 6295 speech go to the speaker. Built from Tempest Enhanced
 (https://github.com/Endprodukt/TempestEnhanced): its 6502 core, AVG state machine, POKEY, platform
 layer (app, menu) and tools were taken over; the controls are the SDK's own.
 
-The ROMs come with the package (`package/roms/mhavocpe.zip`: release 1.01,
-English, ADPCM speech, from `upstream/ROMs/_builds/1.01`); there is no
-licence problem with them (the owner's word).
+The ROMs come with the package, nothing to find: release 1.01 with ADPCM
+speech (`upstream/ROMs`) in all six builds, English, German and French,
+each as The Promised End and as the Tournament Edition (other mazes):
+`package/roms/mhavocpe.zip` complete, the other five (`mhavocpede`,
+`mhavocpefr`, `mhavocpete`, `mhavocpedete`, `mhavocpefrte`, HBMAME's names)
+with their programs only; the speech (the same English in all six) comes
+from `mhavocpe.zip`. There is no licence problem with them (the owner's
+word). The cabinet's AdvanceMAME has only a pre-release (`mhavocpex7`).
+The service menu's GAME SETTINGS choose the build (LANGUAGE, EDITION).
 
 ## Controls
 
@@ -22,7 +28,7 @@ in the service menu (CONTROLS), kept in `save/controls.ini`. Standards:
 
 | Function | Standard |
 |---|---|
-| Roller | the cabinet's spinner (`p1_dialx`; on a PC the mouse), 21 % (a 1200 ppr spinner turn = a turn of the original roller); everything on the ROLLER page |
+| Roller | the cabinet's spinner (`p1_dialx`; on a PC the mouse), 42 % (a 1200 ppr spinner turn = a turn of the original roller, about 500 counts: the LETA counts each pulse 4 times); everything on the CONTROLS page |
 | Jump (button 1, also starts a game) | `p1_button1` |
 | Shield (button 2) | `p1_button2` |
 | Roll left / right | `p1_left` / `p1_right` (1600 counts a second) |
@@ -34,22 +40,23 @@ Major Havoc has no start buttons).
 
 ## Service menu
 
-CONTROLS, ROLLER (what turns it: spinner, second spinner, trackball,
-mouse or a stick's axis, laid out by moving it; sensitivity in 1 % steps,
-shown as turns of the original roller; the spinner's counts a turn; one
-turn as the original; direction; roller x2; stick and key speeds; a live
-roller test), GAME SETTINGS
-(lives, difficulty, bonus life, roller x2), CREDIT SETTINGS (price), SOUND
-SETTINGS (volume, speech, attract sounds), PICTURE (smooth motion, steady
-game frames, board rate, size, position, mirroring, brightness, test
-pattern), ENHANCEMENTS (below), the game's self test, reset high scores
-and statistics. The
+CONTROLS (the buttons, then the roller: what turns it: spinner, second
+spinner, trackball, mouse or a stick's axis, laid out by moving it;
+sensitivity in 1 % steps, shown as turns of the original roller; the
+spinner's counts a turn; one turn as the original; direction; roller x2;
+stick and key speeds; a live roller test), GAME SETTINGS (language,
+edition, lives, difficulty, bonus life, roller x2, then the enhancements,
+below), CREDIT
+SETTINGS (price), SOUND SETTINGS (volume, speech, attract sounds, music
+tempo), PICTURE (smooth motion, steady game frames, board rate, size,
+position, mirroring, brightness, test pattern), the game's self test,
+reset high scores and statistics. The
 game's own settings are kept in its EEPROM; changing them starts the game
 again when the menu is left.
 
 ## Enhancements
 
-On the service menu's ENHANCEMENTS page, each on or off (all off: as the
+On the service menu's GAME SETTINGS page, under ENHANCEMENTS, each on or off (all off: as the
 original):
 
 - MARQUEE SUBTITLE: the title's MAJOR HAVOC stays the game's; the small
@@ -90,7 +97,8 @@ and one missed is made up. AS THE CABINET keeps the original.
 ## Files on the cabinet
 
 `/persistent/games/mhpeenhanced` (the menu's group: Atari): `mhavocpe`,
-`game.ini`, `mhavocpe.ini`, `run.sh`, `marquee.png`, `roms/mhavocpe.zip`; `save/` holds `mhavocpe.ini` (the owner's
-settings), `controls.ini` (the controls) and `eeprom.bin` (high scores, the game's options, statistics).
+`game.ini`, `mhavocpe.ini`, `run.sh`, `marquee.png`, `roms/` (the six builds' zips); `save/` holds `mhavocpe.ini` (the owner's
+settings), `controls.ini` (the controls) and `eeprom.bin` (high scores, the game's options, statistics; the
+Tournament Edition's in `eeprom_te.bin`, the languages share one).
 
 Building, deploying, packaging: BUILD.md.

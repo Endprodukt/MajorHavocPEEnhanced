@@ -46,6 +46,10 @@ typedef struct mh_config {
     float volume;               /* 0..1 */
     float speech;               /* the speech's level against the POKEYs, 0..2 (1: HBMAME's) */
     int   fx[MH_FX_COUNT];      /* the enhancements */
+
+    /* --- the build (rom/romset.h): the game starts again with another --- */
+    int   language;             /* 0 English, 1 German, 2 French */
+    int   tournament;           /* 1: the Tournament Edition (other mazes) */
     char  rom_path[512];
 } mh_config;
 

@@ -2,8 +2,10 @@
 
 ## Current state (2026-11-07)
 
-- Version 0.2.8 (story text higher, high scores higher) on the cabinet
-  and running.
+- Version 0.2.9 built (the roller's standard 42 %, the service menu's
+  pages joined, language and Tournament Edition) on the cabinet since
+  2026-11-07, started by deploy.sh: 50 fps, 5-7 ms a frame, the six ROM
+  zips in roms/; its saved sensitivity 41 % (the owner's) stays.
 - Earlier, version 0.2.2: the port runs on PC (window) and is built for the Pi
   (`build/pi/mhavocpe`, md5 `f800c0e933c5668d28f33acd8068d13b`, the same
   program as 0.2.1); package `build/vpk/mhpeenhanced-0.2.2.vpk` (1.6M,
@@ -20,6 +22,65 @@
   6502 cores; board, rendering, sound, controls, menu and tools are C.
 - Git: public repository https://github.com/Endprodukt/MajorHavocPEEnhanced
   (branch main, created 2026-11-07 with 0.2.8; no release yet).
+
+## 0.2.9: the roller's standard 42 % (the LETA counts 4 times), the menu's pages joined, language and Tournament Edition
+
+- Built for the Pi (`build/pi/mhavocpe` md5
+  `7366875fdef138d8468a3409d709d761`), package
+  `build/vpk/mhpeenhanced-0.2.9.vpk` (md5
+  `571739b103794d86f616a2dde6390751`, 2.2M with the six builds). On the cabinet (deploy.sh now copies all
+  ROM zips).
+
+- The owner doubted the 21 % (and had set 41 % on the cabinet). The game
+  (tw_main.asm, tw_motion.asm): it reads the LETA every second interrupt
+  (measured 407 interrupts, 51 pictures a second), adds half of each
+  change and halves the sum each picture; Rex's speed goes to twice the
+  sum, full speed from about 2400 counts a second. With the LETA counting
+  twice (250 a turn of the 3.25" roller) that took 10 turns of the big
+  roller a second: not the cabinet. The LETA (a quadrature decoder, 2x or
+  4x; the arcadecontrols wiki lists Major Havoc among its games) counted 4
+  times: about 500 a turn, full speed from 5 turns a second. Now the
+  standard 42 % (500 / 1200), ONE TURN AS THE ORIGINAL and the roller test
+  reckon with 500. The settings file now carries `settings_version = 2`;
+  an older one holding the old standard 21 % takes 42 %, an owner's own
+  value stays (the cabinet's 41 %).
+- Language and edition (the owner): The Promised End's own self test
+  settings (price, difficulty, lives, bonus, attract sounds, roller x2)
+  were all in the menu already; its other "settings" are builds:
+  English, German, French, each also as the Tournament Edition (other
+  mazes; upstream/ROMs). All six now come with the package (the five
+  others' programs only, 89-90 KB each zipped; speech and 6C from
+  mhavocpe.zip: the speech is the same English in all), chosen on GAME
+  SETTINGS (LANGUAGE, EDITION; `language`, `tournament` in the ini).
+  Leaving the menu with another build: its ROMs, its EEPROM
+  (`eeprom_te.bin` for the Tournament Edition, the languages share
+  `eeprom.bin`), the menu's options in it, the game started again
+  (`main.c load_roms`, `leave_menu`; `rom/romset.c mh_romset_variant`,
+  `mh_romset_use`, `mh_romset_fill`). A build not found: the English one
+  runs. The cabinet's AdvanceMAME has only a pre-release (mhavocpex7).
+- The enhancements in all six: the title's routines are the same; the
+  story patch now looks for the window's call (E418, the Tournament
+  Edition's E408) and puts its code into page 0's free room where it is
+  (3E00 English; 3E40 German, 3F50 French: their room starts later).
+  FIT: the high score and info pages are as wide as their lines (the
+  German HOHE ERGEBNISSE was cut off at x1.60, now x1.47); the story as
+  wide as its widest line so far (German and French lines are longer:
+  x1.11 / x1.08 after the first long one, English stays x1.15). Checked
+  headless in all six (title, story, high scores, story pages in three
+  languages) and in a window: LANGUAGE DEUTSCH, leaving, the game in
+  German; a start in the French Tournament Edition (`eeprom_te.bin`).
+  Not checked: the info pages (E0+) in German and French, a game played
+  in each build, the cabinet.
+- The service menu (the owner): the ROLLER page joined CONTROLS (under a
+  ROLLER heading; its first line now TURNED BY), ENHANCEMENTS joined GAME
+  SETTINGS (under an ENHANCEMENTS heading); a page too long for the screen
+  is set closer (CONTROLS now 20 lines). Checked in a window: both pages,
+  ESC back, 42 % shown from the old PC settings.
+- Game speed: the interrupts, pictures (50.9 a second when done in time),
+  music and sound keep the cabinet's time. GAME FRAMES STEADY runs the
+  CPUs twice as fast, so the busy scenes that slowed the cabinet down (to
+  about 35 pictures) do not slow down; AS THE CABINET is the original's
+  speed throughout.
 
 ## 0.2.8: the story text up to the subtitle, the high scores higher
 
@@ -238,7 +299,8 @@
   rarely or not at all (none in 120 s).
 - **Roller for a 1200 ppr spinner**: the cabinet's roller (3.25" roller on
   a 0.625" one, 24 tooth wheel: about 125 pulses a turn, counted twice by
-  the LETA without R186) gave about 250 counts a turn; 21 % makes a turn
+  the LETA without R186) gave about 250 counts a turn (0.2.9: wrong, the
+  LETA counts 4 times, 500 a turn, 42 %); 21 % makes a turn
   of the spinner a turn of the roller (sources: craigb-spinner's MAME game
   config page, the KLOV thread on Tempest to Major Havoc conversions).
   Digital rolling 1600 counts a second.
