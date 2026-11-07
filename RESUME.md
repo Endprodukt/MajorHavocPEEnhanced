@@ -12,8 +12,10 @@
   `10 aux 600`, then `roll 130` and `jump 300` per step.
 - To the cabinet: `sh tools/deploy.sh` (`/persistent/games/mhpeenhanced`).
   Package: bump `version` in `package/game.ini`, `sh tools/pack.sh` (ROMs
-  included). Releasing as the other Enhanced games: see Tempest Enhanced's
-  RESUME.md; no repository exists for this game yet.
+  included). Repository: https://github.com/Endprodukt/MajorHavocPEEnhanced (public,
+  main; build/, upstream/, _scratch/, _ref/, external/ and videos stay
+  out, `.gitignore`). Releasing as the other Enhanced games: a GitHub
+  release with the .vpk (see Tempest Enhanced's RESUME.md); none yet.
 - The game's options: `core/options.c` (EEPROM 20-22). Controls:
   `platform/controls.c` (SDK functions). Smoothness: `core/emu.c` (speed),
   `render/frames.c`, `render/smooth.c`. Sound: `sound/sound.c`,

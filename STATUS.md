@@ -18,7 +18,8 @@
   or heard on the cabinet by me.
 - Both original programs (The Promised End 1.01, English, ADPCM) run on two
   6502 cores; board, rendering, sound, controls, menu and tools are C.
-- This folder is not a git checkout.
+- Git: public repository https://github.com/Endprodukt/MajorHavocPEEnhanced
+  (branch main, created 2026-11-07 with 0.2.8; no release yet).
 
 ## 0.2.8: the story text up to the subtitle, the high scores higher
 
