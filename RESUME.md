@@ -46,7 +46,8 @@
   `mhshot --roms upstream/ROMs/mhavocpede --enhance ...`.
 - Never send simulated keys to the desktop while the owner works at the
   PC: they reached the owner's browser once.
-- Next: the owner's word on the ROMs left in the repository's history and
-  in the v0.2.9 release; 0.3.0 to commit, release, cabinet (ask). (0.2.9 is on the cabinet) the owner's verdict on the languages,
+- Next: 0.3.0 to the cabinet (ask; put the ROMs into
+  /usr/local/share/advance/rom there first, the game's roms/ holds 0.2.9's
+  zips); GitHub's cached old commits (STATUS). (0.2.9 is on the cabinet) the owner's verdict on the languages,
   the Tournament Edition, the joined menu pages, the
   music and the enhancements, the open items in STATUS.md.

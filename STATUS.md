@@ -2,11 +2,16 @@
 
 ## Current state (2026-11-07)
 
-- Version 0.3.0 built: the package without ROMs (the owner brings them,
-  README "ROMs"). Not committed, not on the cabinet. The cabinet runs
-  0.2.9 (its roms/ still holds the zips 0.2.9 brought).
-- Open: the public repository's history (commits 2016ef6, 689af96) and
-  the v0.2.9 release's .vpk still hold the ROMs; the owner decides.
+- Version 0.3.0: the package without ROMs (the owner brings them,
+  README "ROMs"), released on GitHub; not on the cabinet. The cabinet
+  runs 0.2.9 (its roms/ still holds the zips 0.2.9 brought).
+- The ROMs taken off GitHub (the owner, 2026-11-07): release v0.2.9 and
+  its tag deleted; the six zips purged from every commit (git
+  filter-branch, then a force push: main be46590; the old history kept
+  locally in `_scratch/repo_before_purge.bundle`). GitHub still serves
+  the old commits by their ids (689af96 checked) until it collects them;
+  for certain: GitHub Support's removal of cached views, or the
+  repository deleted and made anew (no forks, no stars).
 - Version 0.2.9 (the roller's standard 42 %, the service menu's
   pages joined, language and Tournament Edition) on the cabinet since
   2026-11-07, started by deploy.sh: 50 fps, 5-7 ms a frame, the six ROM
@@ -26,10 +31,11 @@
 - Both original programs (The Promised End 1.01, English, ADPCM) run on two
   6502 cores; board, rendering, sound, controls, menu and tools are C.
 - Git: public repository https://github.com/Endprodukt/MajorHavocPEEnhanced
-  (branch main, created 2026-11-07 with 0.2.8). Release v0.2.9
-  (2026-11-07, commit 689af96) with `mhpeenhanced-0.2.9.vpk`:
-  https://github.com/Endprodukt/MajorHavocPEEnhanced/releases/tag/v0.2.9
-  (its notes: `_scratch/release_notes_0.2.9.md`).
+  (branch main, created 2026-11-07 with 0.2.8; history rewritten without
+  ROMs 2026-11-07). Release v0.3.0 with `mhpeenhanced-0.3.0.vpk` (no
+  ROMs): https://github.com/Endprodukt/MajorHavocPEEnhanced/releases/tag/v0.3.0
+  (its notes: `_scratch/release_notes_0.3.0.md`). v0.2.9 (with ROMs) was
+  deleted.
 
 ## 0.3.0: no ROMs in the package
 
