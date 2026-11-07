@@ -2,9 +2,10 @@
 
 ## Current state (2026-11-07)
 
-- Version 0.3.0: the package without ROMs (the owner brings them,
-  README "ROMs"), released on GitHub; not on the cabinet. The cabinet
-  runs 0.2.9 (its roms/ still holds the zips 0.2.9 brought).
+- Version 0.3.1: the package without ROMs (the owner brings them into
+  /persistent/games/rom, README "ROMs"), released on GitHub; not on the
+  cabinet. The cabinet runs 0.2.9 (its roms/ still holds the zips 0.2.9
+  brought).
 - The ROMs taken off GitHub (the owner, 2026-11-07): release v0.2.9 and
   its tag deleted; the six zips purged from every commit (git
   filter-branch, then a force push: main be46590; the old history kept
@@ -32,10 +33,25 @@
   6502 cores; board, rendering, sound, controls, menu and tools are C.
 - Git: public repository https://github.com/Endprodukt/MajorHavocPEEnhanced
   (branch main, created 2026-11-07 with 0.2.8; history rewritten without
-  ROMs 2026-11-07). Release v0.3.0 with `mhpeenhanced-0.3.0.vpk` (no
-  ROMs): https://github.com/Endprodukt/MajorHavocPEEnhanced/releases/tag/v0.3.0
-  (its notes: `_scratch/release_notes_0.3.0.md`). v0.2.9 (with ROMs) was
-  deleted.
+  ROMs 2026-11-07). Release v0.3.1 with `mhpeenhanced-0.3.1.vpk` (no
+  ROMs): https://github.com/Endprodukt/MajorHavocPEEnhanced/releases/tag/v0.3.1
+  (its notes: `_scratch/release_notes_0.3.1.md`). v0.2.9 (with ROMs) and
+  v0.3.0 (the wrong ROM folder in its notes) were deleted.
+
+## 0.3.1: the ROMs into /persistent/games/rom
+
+- Built for the Pi (`build/pi/mhavocpe` md5
+  `e7df1b45de16b57880af05b464c6ba4d`), package
+  `build/vpk/mhpeenhanced-0.3.1.vpk` (md5
+  `638143a932ecec1a99d70a965ce7ec73`, 1.5M, no ROMs).
+- The owner: the ROMs go to /persistent/games/rom (survives VectorPie's
+  updates; /usr/local/share/advance/rom does not count as the place).
+  Looked in right after --roms and rom_path (main.c ROM_DIR); the game
+  makes the folder at its start when /persistent/games is there (not
+  there on the cabinet yet). The screen, the message, README, ini and the
+  release notes name it.
+- Checked on the PC: the message names it, a start with ROMs. Not on the
+  cabinet.
 
 ## 0.3.0: no ROMs in the package
 

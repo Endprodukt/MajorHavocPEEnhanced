@@ -1,9 +1,9 @@
 /* romset.h - The Promised End's ROMs.
  *
  * Major Havoc - The Promised End is Jess M. Askey's; the package does not
- * bring its ROMs: the owner puts them where VectorPie keeps ROMs
- * (/usr/local/share/advance/rom, AdvanceMAME's dir_rom) or into the
- * game's roms/ (README: which). Taken: HBMAME's sets (mhavocpe and its
+ * bring its ROMs: the owner puts them into /persistent/games/rom on the
+ * cabinet (main.c ROM_DIR; also looked in: the game's roms/, AdvanceMAME's
+ * dir_rom; README: which). Taken: HBMAME's sets (mhavocpe and its
  * clones, split, merged or non-merged) and the release zips of
  * jessaskey/mhavocpe (ROMs/_builds/1.01/mhavocpe_<en|de|fr>[_tournament]
  * _adpcm_101.zip), as zips or folders.

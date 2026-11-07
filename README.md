@@ -27,10 +27,11 @@ folder `ROMs/` (one folder per build, as HBMAME names them) or
 `ROMs/_builds/1.01/` (the release zips). HBMAME's sets work as they are:
 split, merged or non-merged.
 
-Where they go: on the VectorPie cabinet into `/usr/local/share/advance/rom/`
-(the cabinet's ROM folder, also on its network share), as zips or as
-folders. Also looked in: the game's own `roms/` folder, `rom_path` in
-`mhavocpe.ini`, `--roms PATH`, `$MH_ROMS`, AdvanceMAME's `dir_rom`.
+Where they go: on the VectorPie cabinet into `/persistent/games/rom/`, as
+zips or as folders (the game makes the folder at its first start; it
+survives VectorPie's updates). Also looked in: `rom_path` in
+`mhavocpe.ini`, `--roms PATH`, the game's own `roms/` folder, AdvanceMAME's
+`dir_rom` (`/usr/local/share/advance/rom/`), `$MH_ROMS`.
 Without them the game shows what is missing and where it goes.
 
 | Build | HBMAME set | or the release zip | files |
@@ -150,7 +151,7 @@ and one missed is made up. AS THE CABINET keeps the original.
 ## Files on the cabinet
 
 `/persistent/games/mhpeenhanced` (the menu's group: Atari): `mhavocpe`,
-`game.ini`, `mhavocpe.ini`, `run.sh`, `marquee.png` (the ROMs: `/usr/local/share/advance/rom/`, above); `save/` holds `mhavocpe.ini` (the owner's
+`game.ini`, `mhavocpe.ini`, `run.sh`, `marquee.png` (the ROMs: `/persistent/games/rom/`, above); `save/` holds `mhavocpe.ini` (the owner's
 settings), `controls.ini` (the controls) and `eeprom.bin` (high scores, the game's options, statistics; the
 Tournament Edition's in `eeprom_te.bin`, the languages share one).
 

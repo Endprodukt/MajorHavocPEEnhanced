@@ -45,6 +45,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 
 #define MAX_PATHS 48
 
@@ -55,6 +56,8 @@
 #define STEADY_SPEED 2          /* the alpha's speed for steady frames (core/emu.h: 2 is enough, measured) */
 
 enum { MODE_GAME, MODE_MENU, MODE_PATTERN, MODE_ROLLER_TEST };
+
+#define ROM_DIR         "/persistent/games/rom"   /* where the owner puts the ROMs (README) */
 
 #define ORIGINAL_COUNTS 500.0   /* the cabinet's roller: counts a turn (render/config.c) */
 #define FULL_SPEED      2400.0  /* roller counts a second: Rex at full speed (render/config.c) */
@@ -73,6 +76,9 @@ static int rom_paths(int argc, char **argv, const mh_config *cfg, const char **p
         n = mh_romset_add_dir(paths, n, MAX_PATHS, cfg->rom_path);
         paths[n++] = cfg->rom_path;
     }
+    /* the cabinet's ROM folder for the games (VectorPie: /persistent
+     * survives the image's updates; on its network share) */
+    n = mh_romset_add_dir(paths, n, MAX_PATHS, ROM_DIR);
     /* the game's own roms/, next to the program (the owner's) */
     static char pkg[1024];
     vp_asset_path("roms", pkg, sizeof pkg);
@@ -486,7 +492,7 @@ static void show_missing(mh_app *app, const char *missing)
         vp_text(d, "HBMAME's mhavocpe.zip or the release mhavocpe_en_adpcm_101.zip", 2048, 2330, 75, VP_TEXT_CENTER);
         vp_text(d, "into", 2048, 2160, 75, VP_TEXT_CENTER);
         vp_color(d, 80, 220, 255);
-        vp_text(d, "/usr/local/share/advance/rom", 2048, 1960, 95, VP_TEXT_CENTER);
+        vp_text(d, ROM_DIR, 2048, 1960, 95, VP_TEXT_CENTER);
         vp_color(d, 220, 220, 220);
         snprintf(line, sizeof line, "missing: %s%s", missing, roms.lpc ? "   (an LPC build was found: ADPCM only)" : "");
         vp_text(d, line, 2048, 1650, 60, VP_TEXT_CENTER);
@@ -536,6 +542,11 @@ static void leave_menu(int *mode, mh_menu *menu, mh_app *app)
 
 int main(int argc, char **argv)
 {
+#ifndef _WIN32
+    /* the ROM folder made on the cabinet, so that the owner finds it */
+    struct stat st;
+    if (stat("/persistent/games", &st) == 0 && S_ISDIR(st.st_mode)) mkdir(ROM_DIR, 0775);
+#endif
     mh_config_defaults(&cfg);
     char buf[1024];
     const char *arg = mh_arg(argc, argv, "--config");
@@ -553,7 +564,7 @@ int main(int argc, char **argv)
     if (load_roms() != 0) {
         char missing[512];
         fprintf(stderr, "mhavocpe: ROMs missing: %s (The Promised End 1.01, ADPCM: HBMAME's mhavocpe.zip or "
-                "mhavocpe_en_adpcm_101.zip into /usr/local/share/advance/rom; README)%s\n",
+                "mhavocpe_en_adpcm_101.zip into " ROM_DIR "; README)%s\n",
                 mh_romset_missing(&roms, missing, sizeof missing),
                 roms.lpc ? "; a build with LPC speech was found: only ADPCM builds are supported" : "");
         mh_app app;
