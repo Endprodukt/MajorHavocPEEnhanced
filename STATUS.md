@@ -35,8 +35,9 @@
   (branch main, created 2026-11-07 with 0.2.8; history rewritten without
   ROMs 2026-11-07). Release v0.3.1 with `mhpeenhanced-0.3.1.vpk` (no
   ROMs): https://github.com/Endprodukt/MajorHavocPEEnhanced/releases/tag/v0.3.1
-  (its notes: `_scratch/release_notes_0.3.1.md`). v0.2.9 (with ROMs) and
-  v0.3.0 (the wrong ROM folder in its notes) were deleted.
+  (its notes: `_scratch/release_notes_0.3.1.md`). v0.2.9 (with ROMs) was
+  deleted; v0.3.0 (no ROMs, but the wrong ROM folder in its notes) is
+  still there: deleting it waits for the owner's word.
 
 ## 0.3.1: the ROMs into /persistent/games/rom
 
